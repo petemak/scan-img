@@ -1,4 +1,0 @@
-(ns scan-img.db)
-
-(def default-db
-  (atom {:name "re-frame"}))
