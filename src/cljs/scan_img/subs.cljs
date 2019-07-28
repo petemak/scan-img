@@ -6,3 +6,9 @@
  ::name
  (fn [db]
    (:name db)))
+
+
+(rf/reg-sub
+ :upload-status
+ (fn [db]
+   (:upload-status db)))

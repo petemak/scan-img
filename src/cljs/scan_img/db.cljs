@@ -1,4 +1,5 @@
 (ns scan-img.db)
 
 (def default-db
-  {:name "re-frame"})
+  {:name "Image scanner"
+   :upload-status "Idle..." })
