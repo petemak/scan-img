@@ -1,8 +1,7 @@
 (ns scan-img.views
-  (:require
-   [re-frame.core :as rf]
-   [scan-img.subs :as subs]
-   [ajax.core :refer [POST]]))
+  (:require [re-frame.core :as rf]
+            [scan-img.subs :as subs]
+            [ajax.core :refer [POST]]))
 
 
 (defn name-field
@@ -12,8 +11,8 @@
    [:input {:type "text"
             :value @(rf/subscribe [::subs/name])
             :on-change #(rf/dispatch [:name-change (-> %
-                                                      .-target
-                                                      .-value)])}]])
+                                                       .-target
+                                                       .-value)])}]])
  
 ;;-----------------------------------------------------------
 ;; Upload status indicator
@@ -30,8 +29,13 @@
 ;; Indicator
 ;;----------------------------------------------------------
 (defn status-indicator []
-  [:div
-   [:h3 "Status"]
+  [:div {:class "progress"}
+   [:div {:class ["progress-bar" "progress-bar-striped" "bg-success"]
+          :role "progressbar"
+          :style {:width "25%"}
+          :aria-valuenow "25"
+          :aria-valuemin "0"
+          :aria-valuemax "100"} "25%"]
    @(rf/subscribe [:upload-status])])
 
 ;;-----------------------------------------------------------
@@ -96,10 +100,17 @@
    [:form {:id "upload-form"
            :enc-type "multipart/form-data"
            :method "POST"}
-    [:label "Filename: "]
-    [:input {:type "file"
-             :name "file-upload-input"
-             :id "file-upload-input"}]]])
+    [:div {:class "custom-file"}
+     [:label {:class "custom-file-label"
+              :for "file-upload-input"} "Filename: "]
+     [:input {:type "file"
+              :class "custom-file-input"
+              :name "file-upload-input"
+              :id "file-upload-input"}]]]])
+
+
+
+
 
 
 ;;----------------------------------------------------------
@@ -111,6 +122,12 @@
     [:div
      [:h1 "Remote Task Executer: " @name]
      [:hr]
-     [upload-form]
-     [status-indicator]
-     [upload-button]]))
+     [:div.container
+      [:div.row
+       [:div.col [upload-form]]]
+      
+      [:div.row
+       [:div.col [status-indicator]]]
+
+      [:div.row.justify-content-end
+       [:div.col-2  [upload-button] ]]]]))
