@@ -82,7 +82,6 @@
 ;;-----------------------------------------------------------
 (defn upload-button []
   [:div
-   [:hr]
    [:button {:class "btn btn-primary"
              :type "button"
              :on-click #(upload-file "file-upload-input")}
@@ -101,12 +100,15 @@
            :enc-type "multipart/form-data"
            :method "POST"}
     [:div {:class "custom-file"}
-     [:label {:class "custom-file-label"
-              :for "file-upload-input"} "Filename: "]
      [:input {:type "file"
               :class "custom-file-input"
               :name "file-upload-input"
-              :id "file-upload-input"}]]]])
+              :id "file-upload-input"
+              :on-change #(rf/dispatch [:file-selected (-> %
+                                                           .-target
+                                                           .-value)])}]
+     [:label {:class "custom-file-label"
+              :for "file-upload-input"} @(rf/subscribe [:file-selected])]]]])
 
 
 
@@ -129,5 +131,5 @@
       [:div.row
        [:div.col [status-indicator]]]
 
-      [:div.row.justify-content-end
-       [:div.col-2  [upload-button] ]]]]))
+      [:div.d-flex.flex-row-reverse
+       [:div.p-2  [upload-button] ]]]]))

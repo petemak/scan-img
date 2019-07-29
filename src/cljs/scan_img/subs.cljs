@@ -12,3 +12,9 @@
  :upload-status
  (fn [db]
    (:upload-status db)))
+
+
+(rf/reg-sub
+ :file-selected
+ (fn [db]
+   (:file-selected db)))
