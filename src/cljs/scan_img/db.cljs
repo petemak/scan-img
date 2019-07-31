@@ -2,4 +2,5 @@
 
 (def default-db
   {:name "Image scanner"
-   :upload-status "Idle..." })
+   :upload-status "Idle ..."
+   :file-selected "Choose file ..."})
