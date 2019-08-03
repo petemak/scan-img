@@ -46,11 +46,18 @@
 ;; Ajax functions
 ;;-----------------------------------------------------------
 (defn handle-response-ok [resp]
-  (let [rsp (js->clj resp :keywordize-keys true)
+  (let [rsp (cljs.reader/read-string resp)
         sts (status "Upload succeeded"
-                    [(str "Filename: " (:filename rsp))
+                    [(str "Message: " (:message rsp))
+                     (str "Filename: " (:filename rsp))
                      (str "Size: " (:size rsp))
-                     (str "Tempfile: " (:tempfile rsp))])]
+                     (str "Path: " (:path rsp))])]
+    (println (str "::-> resp: " resp))
+    (println (str "::-> rsp: " rsp))
+    ;;(println (str "::-> resp -> read-str: " (cljs.reader/read-string resp)))
+    (println (str "::-> response ok rsp: [" rsp "]"))
+    (println (str "::-> response ok sts: " sts))
+
     (rf/dispatch [:upload-status sts])))
 
 (defn handle-response-error [ctx]
@@ -60,7 +67,8 @@
                      (str "HTTP tatus message: " (:status-text ctx))
                      (str "Failure type: " (:failure ctx))
                      (str "Response message: " (:message rsp))])]
-    (.log js/console (str "Upload error: " sts))
+
+    (println (str "::-> response error: " rsp))
     (rf/dispatch [:upload-status sts] )))
 
 
@@ -74,12 +82,12 @@
         form-data (doto
                       (js/FormData.)
                       (.append name file))
-        sts (status "Uploading file..." [])]
-    (POST "/upload" {:body form-data
-                     :response-format :json
-                     :keywords? true
-                     :handler handle-response-ok
-                     :error-handler handle-response-error})
+        sts (status (str  "Uploading file " name) [])]
+    (POST "/upload/scan" {:body form-data
+                          ;; :response-format :json
+                          ;; :keywords? true
+                          :handler handle-response-ok
+                          :error-handler handle-response-error})
 
     (rf/dispatch [:upload-status sts])))
 
@@ -90,7 +98,7 @@
 (defn upload-button []
    [:button {:class "btn btn-primary"
             :type "button"
-            :on-click #(upload-file "file-upload-input")}
+            :on-click #(upload-file "file")}
     "Upload ..." ] )
 
 
@@ -110,8 +118,8 @@
       [:input {:type "file"
                :class "custom-file-input"
                :required "true"
-               :name "file-upload-input"
-               :id "id-file-upload-input"
+               :name "file"
+               :id "file"
                :on-change #(rf/dispatch [:file-selected (-> %
                                                             .-target
                                                             ;;.-value
@@ -119,13 +127,13 @@
                                                             (aget 0)
                                                             .-name)])}]
       [:label {:class "custom-file-label"
-               :for  "file-upload-input"} @(rf/subscribe [:file-selected])]]]
+               :for  "file"} @(rf/subscribe [:file-selected])]]]
     [:div {:class "form-group"}
      [:button {:type "reset"
                :class "btn btn-danger float-left"} "Reset"]  
      [:button {:type "button"
                :class "btn btn-primary float-right"
-               :on-click #(upload-file "id-file-upload-input")} "Upload & Scan..."]]]])
+               :on-click #(upload-file "file")} "Scan image..."]]]])
 
 
 
