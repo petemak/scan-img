@@ -1,5 +1,6 @@
 (ns scan-img.views
-  (:require [re-frame.core :as rf]
+  (:require [cljs.reader :as cr]
+            [re-frame.core :as rf]
             [scan-img.subs :as subs]
             [ajax.core :refer [POST]]))
 
@@ -13,6 +14,18 @@
             :on-change #(rf/dispatch [:name-change (-> %
                                                        .-target
                                                        .-value)])}]])
+
+
+(defn dispatch-tick
+  "Dispatch ticking event"
+  []
+  (rf/dispatch [:progress-tick]))
+
+
+;; call the ticker dispatching function every half a second
+(defonce ticker (js/setInterval dispatch-tick 400))
+
+
  
 ;;-----------------------------------------------------------
 ;; Upload status indicator
@@ -26,15 +39,17 @@
 ;; Indicator
 ;;----------------------------------------------------------
 (defn status-indicator []
-  (let [status @(rf/subscribe [:upload-status])]
+  (let [status @(rf/subscribe [:upload-status])
+        tick @(rf/subscribe [:progress-tick])
+        ptick (str tick "%")]
     [:div
      [:div {:class "progress"}
       [:div {:class ["progress-bar" "progress-bar-striped" "bg-success"]
              :role "progressbar"
-             :style {:width "25%"}
-             :aria-valuenow "25"
+             :style {:width ptick}
+             :aria-valuenow tick
              :aria-valuemin "0"
-             :aria-valuemax "100"} "25%"]]
+             :aria-valuemax "100"} ptick]]
      [:br]
      [:div {:class "alert alert-success" :role "alert"}
       [:h4 (:title status)]
@@ -46,18 +61,12 @@
 ;; Ajax functions
 ;;-----------------------------------------------------------
 (defn handle-response-ok [resp]
-  (let [rsp (cljs.reader/read-string resp)
+  (let [rsp (cr/read-string resp)
         sts (status "Upload succeeded"
                     [(str "Message: " (:message rsp))
                      (str "Filename: " (:filename rsp))
                      (str "Size: " (:size rsp))
                      (str "Path: " (:path rsp))])]
-    (println (str "::-> resp: " resp))
-    (println (str "::-> rsp: " rsp))
-    ;;(println (str "::-> resp -> read-str: " (cljs.reader/read-string resp)))
-    (println (str "::-> response ok rsp: [" rsp "]"))
-    (println (str "::-> response ok sts: " sts))
-
     (rf/dispatch [:upload-status sts])))
 
 (defn handle-response-error [ctx]

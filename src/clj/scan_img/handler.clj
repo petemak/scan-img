@@ -1,5 +1,5 @@
 (ns scan-img.handler
-  (:require [clojure.java.io :as io]
+  (:require [scan-img.save-upload :as fp]
             [compojure.core :refer [GET POST context routes defroutes]]
             [compojure.route :refer [resources]]
             [ring.util.response :as ring-response]
@@ -10,6 +10,7 @@
 
 
 (defn ok-resp
+  "Generate response map with specified data in the body"
   [data]
   (-> (ring-response/response (pr-str data))
       (ring-response/content-type "application/edn")))
@@ -17,32 +18,31 @@
 
 ;;--------------------------------------------------------------
 ;; Process an upload for scanning
+;; side effects
 ;;--------------------------------------------------------------
 (defn process-scan-upload
+  "Handler processes file uploads
+   First saves and then posts uploaded event on processing quest"
   [params]
   (let [file (get params "file")
-        temp-file (:tempfile file)
+        src-file (:tempfile file)
         file-name (:filename file)
         file-size (:size file)
         resp-data (dissoc file :tempfile)]
-    (println (str "::-> params: " params))   
-    (println (str "::-> file: "    file))
-    (println (str "::-> tmp-file:"  temp-file))
-    (println (str "::-> file name:" file-name))
-    (println (str "::-> file size:" file-size))
 
     (do
-      (let [target (io/file "resources" "public" "uploads" file-name) ]
-        (io/copy temp-file target)
-        (-> resp-data
-            (assoc :message (str  "File [" file-name "] saved"))
-            (assoc :path (.getPath target)) 
-            (ok-resp))))))
+      (fp/file-producer src-file file-name (fp/file-consumer))
+      (-> resp-data
+         (assoc :message (str  "File [" file-name "] saved"))
+         (assoc :size file-size) 
+         (ok-resp)))))
 
 ;;--------------------------------------------------------------
 ;; Progress functions for multipart warapper. Called during uploads.
 ;;--------------------------------------------------------------
 (defn progress-fn
+  "Progress function inoked by multi-part upload wrapper
+   Could this be used to send SSE events to client?"
   [request bytes-read content-length item-count]
   (println (str  "::> request " request ))
   (println (str  "::> content lenght " content-length ))

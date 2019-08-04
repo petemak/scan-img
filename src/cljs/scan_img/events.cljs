@@ -37,6 +37,17 @@
    {:db (assoc db :file-selected file-name)}))
 
 
+;;-----------------------------------------------------------
+;; Domino 2: comupte effect of ticker
+;;-----------------------------------------------------------
+(rf/reg-event-fx
+ :progress-tick
+ (fn [{:keys [db]} [_ _]]
+   (let [tick (:progress-tick db)
+         new-tick (if (< tick 100) (+ tick 10) 0)] 
+     {:db (assoc db :progress-tick new-tick)})))
+
+
 
 
 

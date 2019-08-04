@@ -18,3 +18,9 @@
  :file-selected
  (fn [db]
    (:file-selected db)))
+
+
+(rf/reg-sub
+ :progress-tick
+ (fn [db]
+   (str (:progress-tick db))))
