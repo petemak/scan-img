@@ -49,5 +49,25 @@
 
 
 
+;;-----------------------------------------------------------
+;; Domino 2: comupte effect of resetting the ticker
+;;-----------------------------------------------------------
+(rf/reg-event-fx
+ :reset-ticker 
+ (fn [{:keys [db]} [_ val]]
+   {:db (assoc db :progress-tick val)}))
+
+
+
+;;-----------------------------------------------------------
+;; Domino 2: comupte effect of resetting the form
+;;-----------------------------------------------------------
+(rf/reg-event-fx
+ :reset-form 
+ (fn [{:keys [db]} [_ _]]
+   (let [ndb (assoc db :file-selected "")]
+     {:db (assoc ndb :progress-tick 0)})))
+
+
 
 

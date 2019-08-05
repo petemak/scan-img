@@ -5,21 +5,17 @@
             [ajax.core :refer [POST]]))
 
 
-(defn name-field
-  []
-  [:div
-   "Title: "
-   [:input {:type "text"
-            :value @(rf/subscribe [::subs/name])
-            :on-change #(rf/dispatch [:name-change (-> %
-                                                       .-target
-                                                       .-value)])}]])
 
+(defonce tick-status (atom {:tick false}))
 
+;;----------------------------------------------------------
+;; Ticker event to drive progress monitor
+;;----------------------------------------------------------
 (defn dispatch-tick
   "Dispatch ticking event"
   []
-  (rf/dispatch [:progress-tick]))
+  (if (:tick (deref tick-status))
+    (rf/dispatch [:progress-tick])))
 
 
 ;; call the ticker dispatching function every half a second
@@ -42,6 +38,8 @@
   (let [status @(rf/subscribe [:upload-status])
         tick @(rf/subscribe [:progress-tick])
         ptick (str tick "%")]
+    (if (= "100" tick)
+      (swap! tick-status assoc :tick false))
     [:div
      [:div {:class "progress"}
       [:div {:class ["progress-bar" "progress-bar-striped" "bg-success"]
@@ -92,26 +90,21 @@
                       (js/FormData.)
                       (.append name file))
         sts (status (str  "Uploading file " name) [])]
-    (POST "/upload/scan" {:body form-data
-                          ;; :response-format :json
-                          ;; :keywords? true
-                          :handler handle-response-ok
-                          :error-handler handle-response-error})
+    (do
+      
+      (POST "/upload/scan" {:body form-data
+                            ;; :response-format :json
+                            ;; :keywords? true
+                            :handler handle-response-ok
+                            :error-handler handle-response-error})
 
-    (rf/dispatch [:upload-status sts])))
-
-
-;;-----------------------------------------------------------
-;;  component
-;;-----------------------------------------------------------
-(defn upload-button []
-   [:button {:class "btn btn-primary"
-            :type "button"
-            :on-click #(upload-file "file")}
-    "Upload ..." ] )
+      (rf/dispatch [:upload-status sts])
+      (swap! tick-status assoc :tick true))))
 
 
-
+(defn reset-form
+  []
+  (rf/dispatch [:reset-form]))
 
 
 ;;-----------------------------------------------------------
@@ -129,6 +122,7 @@
                :required "true"
                :name "file"
                :id "file"
+               :on-click #(rf/dispatch [:reset-ticker 0])
                :on-change #(rf/dispatch [:file-selected (-> %
                                                             .-target
                                                             ;;.-value
@@ -139,7 +133,9 @@
                :for  "file"} @(rf/subscribe [:file-selected])]]]
     [:div {:class "form-group"}
      [:button {:type "reset"
-               :class "btn btn-danger float-left"} "Reset"]  
+               :class "btn btn-danger float-left"} "Reset"
+               :on-click #(reset-form)]
+     
      [:button {:type "button"
                :class "btn btn-primary float-right"
                :on-click #(upload-file "file")} "Scan image..."]]]])

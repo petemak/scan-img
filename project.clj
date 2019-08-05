@@ -8,7 +8,8 @@
                  [yogthos/config "1.1.2"]
                  [ring "1.7.1"]
                  [cljs-ajax "0.8.0"]
-                 [fogus/ring-edn "0.3.0"]]
+                 [fogus/ring-edn "0.3.0"]
+                 [com.taoensso/timbre "4.10.0"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-ring "0.12.5"]]

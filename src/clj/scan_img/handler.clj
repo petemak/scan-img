@@ -2,12 +2,14 @@
   (:require [scan-img.save-upload :as fp]
             [compojure.core :refer [GET POST context routes defroutes]]
             [compojure.route :refer [resources]]
+            [taoensso.timbre :as timbre]
             [ring.util.response :as ring-response]
             [ring.middleware.reload :refer [wrap-reload]]
             [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.edn :refer [wrap-edn-params]]            
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]))
 
+(timbre/set-level! :debug)
 
 (defn ok-resp
   "Generate response map with specified data in the body"
@@ -44,10 +46,10 @@
   "Progress function inoked by multi-part upload wrapper
    Could this be used to send SSE events to client?"
   [request bytes-read content-length item-count]
-  (println (str  "::> request " request ))
-  (println (str  "::> content lenght " content-length ))
-  (println (str  "::> item-count " item-count ))
-  (println (str  "::> bytes-read " bytes-read )))
+  (timbre/info "::> request " request)
+  (timbre/info "::> content lenght " content-length)
+  (timbre/info "::> item count " item-count)
+  (timbre/info "::> bytes read " bytes-read))
 
 
 ;;--------------------------------------------------------------
