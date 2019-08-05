@@ -1,6 +1,7 @@
 (ns scan-img.save-upload
   (:require [clojure.java.io :as io]
-            [clojure.core.async :as async]))
+            [clojure.core.async :as async]
+            [clj-commons-exec :as exec]))
 
 
 ;;--------------------------------------------------------------

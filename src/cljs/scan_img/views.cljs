@@ -90,7 +90,9 @@
                       (js/FormData.)
                       (.append name file))
         sts (status (str  "Uploading file " name) [])]
-    (do
+    (when (some? file)
+      (println "::-> name: " name)
+      (println "::-> file: " file)
       
       (POST "/upload/scan" {:body form-data
                             ;; :response-format :json
@@ -133,8 +135,8 @@
                :for  "file"} @(rf/subscribe [:file-selected])]]]
     [:div {:class "form-group"}
      [:button {:type "reset"
-               :class "btn btn-danger float-left"} "Reset"
-               :on-click #(reset-form)]
+               :class "btn btn-danger float-left"
+               :on-click #(reset-form)} "Reset"]
      
      [:button {:type "button"
                :class "btn btn-primary float-right"
