@@ -34,10 +34,14 @@
 
     (do
       (fp/file-producer src-file file-name (fp/file-consumer))
-      (-> resp-data
-         (assoc :message (str  "File [" file-name "] saved"))
-         (assoc :size file-size) 
-         (ok-resp)))))
+      (let [results (fp/run-docker-version-command!)]
+        (println "::-> command results: " results)
+        (-> resp-data
+            (assoc :message (str  "File [" file-name "] saved"))
+            (assoc :cmd-results results)
+            (assoc :size file-size)
+            (assoc :path "-")
+            (ok-resp))))))
 
 ;;--------------------------------------------------------------
 ;; Progress functions for multipart warapper. Called during uploads.

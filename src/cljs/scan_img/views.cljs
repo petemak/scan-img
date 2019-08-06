@@ -21,14 +21,16 @@
 ;; call the ticker dispatching function every half a second
 (defonce ticker (js/setInterval dispatch-tick 400))
 
-
  
 ;;-----------------------------------------------------------
 ;; Upload status indicator
 ;;-----------------------------------------------------------
-(defn status [title messages]
+(defn status [title
+              upl-messages
+              cmd-messages]
   {:title title
-   :messages messages})
+   :upl-messages upl-messages
+   :cmd-messages cmd-messages})
 
 
 ;;-----------------------------------------------------------
@@ -52,30 +54,46 @@
      [:div {:class "alert alert-success" :role "alert"}
       [:h4 (:title status)]
       [:ul
-       (for [msg (:messages status)]
-         [:li msg])]]]))
+       (for [msg (:upl-messages status)]
+         [:li msg])]
+      [:h4 "Scan results"]
+      [:ul
+       [:li (str "exit value: " (:exit (:cmd-messages status)))]]]]))
 
 ;;-----------------------------------------------------------
-;; Ajax functions
+;; Ajax halder functions
 ;;-----------------------------------------------------------
-(defn handle-response-ok [resp]
+(defn upload-messages
+  [rsp]
+  [(str "Message: " (:message rsp))
+   (str "Filename: " (:filename rsp))
+   (str "Size: " (:size rsp))
+   (str "Path: " (:path rsp))])
+
+(defn handle-response-ok
+  "Handle a successful response. The parameter will contain
+  data supplie to the response object by the server"
+  [resp]
   (let [rsp (cr/read-string resp)
+        upl-messages (upload-messages rsp)
+        cmd-messages (:cmd-results rsp)   
         sts (status "Upload succeeded"
-                    [(str "Message: " (:message rsp))
-                     (str "Filename: " (:filename rsp))
-                     (str "Size: " (:size rsp))
-                     (str "Path: " (:path rsp))])]
+                    upl-messages
+                    cmd-messages)]
+    (println "::-> handle-reponse-ok: upl " upl-messages)
+    (println "::-> handle-reponse-ok: cmd " cmd-messages)
     (rf/dispatch [:upload-status sts])))
 
-(defn handle-response-error [ctx]
+(defn handle-response-error
+  "Handle a failed uplod"
+  [ctx]
   (let [rsp (js->clj (:response ctx) :keywordize-keys true)
         sts (status "Upload failed!"
                     [(str "HTTP status code: "  (:status ctx))
                      (str "HTTP tatus message: " (:status-text ctx))
                      (str "Failure type: " (:failure ctx))
-                     (str "Response message: " (:message rsp))])]
-
-    (println (str "::-> response error: " rsp))
+                     (str "Response message: " (:message rsp))]
+                    nil)]
     (rf/dispatch [:upload-status sts] )))
 
 
@@ -89,7 +107,7 @@
         form-data (doto
                       (js/FormData.)
                       (.append name file))
-        sts (status (str  "Uploading file " name) [])]
+        sts (status (str  "Uploading file " name) [] {})]
     (when (some? file)
       (println "::-> name: " name)
       (println "::-> file: " file)

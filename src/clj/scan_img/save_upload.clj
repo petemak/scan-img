@@ -1,5 +1,6 @@
 (ns scan-img.save-upload
   (:require [clojure.java.io :as io]
+            [clojure.string :as str]
             [clojure.core.async :as async]
             [clj-commons-exec :as exec]))
 
@@ -9,18 +10,20 @@
 ;; side effects!!!
 ;;--------------------------------------------------------------
 (defn ensure-parent-dir!
-  "Check and create parent directory
-  -> seems make-parents fails gracefully returning false!!!!"
-  [file]
-  (let [parent-dir (io/as-file (.getParent file))]
-    (if (not (.isDirectory parent-dir))
-      (io/make-parents parent-dir))))
+  "Check and create parent directory if it doesnt exist.
+  Uses canonical path to remove OS dependent path strings.
+  -> seems make-parents fails gracefully returning false in case of error !!!!"
+  [f]
+  (let [can-path (.getCanonicalPath f)
+        parent-file (io/as-file (.getParent f))]
+    (if (not (.isDirectory parent-file))
+      (io/make-parents can-path))))
 
 ;;--------------------------------------------------------------
 ;; consumer for file processing
 ;;--------------------------------------------------------------
 (defn save-file
-  "Save file"
+  "Save file to resources/public/uploads. "
   [src file-name]
   (let [target (io/file "resources" "public" "uploads" file-name) ]
     (ensure-parent-dir! target)
@@ -36,7 +39,6 @@
   (let [in (async/chan (async/sliding-buffer 64))]
     (async/go-loop [data (async/<! in)]
       (when data
-        (println "Event data: " data)
         (save-file (:src data) (:file-name data))
         (recur (async/<! in))))
     in))
@@ -51,3 +53,17 @@
   [src name consumer-ch]
   (async/go
     (async/>! consumer-ch {:src src :file-name name})))
+
+
+;;--------------------------------------------------------------
+;; Execute docker command
+;; side effects!!!
+;;--------------------------------------------------------------
+(defn run-docker-version-command!
+  "Run the docker version command and return relults"
+  []
+  (let [result @(exec/sh ["ls" "-al"])]
+    (if (some? (:out result))
+      (assoc result :outstrlst (str/split (:out result) #"\n"))
+      result)))
+
