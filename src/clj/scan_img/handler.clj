@@ -35,7 +35,6 @@
     (do
       (fp/file-producer src-file file-name (fp/file-consumer))
       (let [results (fp/run-docker-version-command!)]
-        (println "::-> command results: " results)
         (timbre/info "::-> " results)
         (-> resp-data
             (assoc :message (str  "File [" file-name "] saved"))

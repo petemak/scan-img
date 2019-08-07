@@ -40,6 +40,7 @@
   (let [status @(rf/subscribe [:upload-status])
         tick @(rf/subscribe [:progress-tick])
         ptick (str tick "%")]
+    (println status)
     (if (= "100" tick)
       (swap! tick-status assoc :tick false))
     [:div
@@ -55,7 +56,7 @@
       [:h4 (:title status)]
       [:ul
        (for [msg (:upl-messages status)]
-         [:li msg])]
+         [:li {:key (subs msg 0 2)} msg])]
 
       (if (some? (:cmd-messages status))
         [:h4 "Scan results"])
@@ -66,10 +67,10 @@
       
         (if (some? cmd-messages)
           [:ul
-           [:li (str ":exit " (:exit cmd-messages))]
-           [:li (str ":err " (:err cmd-messages))]
+           [:li {:key "exit"}  (str ":exit " (:exit cmd-messages))]
+           [:li {:key "err"} (str ":err " (:err cmd-messages))]
            (for [out output-list]
-             [:li out])]))]]))
+             [:li {:key (subs out 0 2)} out])]))]]))
 
 ;;-----------------------------------------------------------
 ;; Ajax halder functions
@@ -105,6 +106,7 @@
                      (str "Failure type: " (:failure ctx))
                      (str "Response message: " (:message rsp))]
                     nil)]
+    (println "::-> handle-reponse-error: rsp " rsp)
     (rf/dispatch [:upload-status sts] )))
 
 
@@ -118,7 +120,7 @@
         form-data (doto
                       (js/FormData.)
                       (.append name file))
-        sts (status (str  "Uploading file " name) [] nil)]
+        sts (status (str  "Uploading file '" name "'") [] nil)]
     (when (some? file)
       (POST "/upload/scan" {:body form-data
                             ;; :response-format :json
