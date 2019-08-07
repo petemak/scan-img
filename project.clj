@@ -10,6 +10,7 @@
                  [cljs-ajax "0.8.0"]
                  [fogus/ring-edn "0.3.0"]
                  [com.taoensso/timbre "4.10.0"]
+                 [ring-sse/ring-sse "0.2.8"]
                  [org.clojars.hozumi/clj-commons-exec "1.2.0"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]

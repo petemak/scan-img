@@ -16,6 +16,7 @@
   [f]
   (let [can-path (.getCanonicalPath f)
         parent-file (io/as-file (.getParent f))]
+    
     (if (not (.isDirectory parent-file))
       (io/make-parents can-path))))
 
@@ -62,7 +63,7 @@
 (defn run-docker-version-command!
   "Run the docker version command and return relults"
   []
-  (let [result @(exec/sh ["ls" "-al"])]
+  (let [result @(exec/sh ["docker" "version"])]
     (if (some? (:out result))
       (assoc result :outstrlst (str/split (:out result) #"\n"))
       result)))

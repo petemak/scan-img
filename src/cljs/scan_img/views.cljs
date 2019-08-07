@@ -56,9 +56,20 @@
       [:ul
        (for [msg (:upl-messages status)]
          [:li msg])]
-      [:h4 "Scan results"]
-      [:ul
-       [:li (str "exit value: " (:exit (:cmd-messages status)))]]]]))
+
+      (if (some? (:cmd-messages status))
+        [:h4 "Scan results"])
+
+      (let [cmd-messages (:cmd-messages status)
+            output-list (:outstrlst cmd-messages)]
+           
+      
+        (if (some? cmd-messages)
+          [:ul
+           [:li (str ":exit " (:exit cmd-messages))]
+           [:li (str ":err " (:err cmd-messages))]
+           (for [out output-list]
+             [:li out])]))]]))
 
 ;;-----------------------------------------------------------
 ;; Ajax halder functions
@@ -107,11 +118,8 @@
         form-data (doto
                       (js/FormData.)
                       (.append name file))
-        sts (status (str  "Uploading file " name) [] {})]
+        sts (status (str  "Uploading file " name) [] nil)]
     (when (some? file)
-      (println "::-> name: " name)
-      (println "::-> file: " file)
-      
       (POST "/upload/scan" {:body form-data
                             ;; :response-format :json
                             ;; :keywords? true
