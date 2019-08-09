@@ -40,8 +40,11 @@
   (let [status @(rf/subscribe [:upload-status])
         tick @(rf/subscribe [:progress-tick])
         ptick (str tick "%")]
-    (println status)
-    (if (= "100" tick)
+    (println "::--> Status --[" status "]--")
+    (println "::--> Tick --[" tick "]--")
+    
+    (when (= "100" tick)
+      (println "::--> Sopping tick --[" tick "]--")       
       (swap! tick-status assoc :tick false))
     [:div
      [:div {:class "progress"}
@@ -94,6 +97,7 @@
                     cmd-messages)]
     (println "::-> handle-reponse-ok: upl " upl-messages)
     (println "::-> handle-reponse-ok: cmd " cmd-messages)
+    (rf/dispatch [:reset-ticker 100])
     (rf/dispatch [:upload-status sts])))
 
 (defn handle-response-error
@@ -178,15 +182,14 @@
 ;;----------------------------------------------------------
 (defn main-panel
   []
-  (let [name (rf/subscribe [::subs/name])]
-    [:div.container
-     [:div.container
-      [:nav.navbar.navbar-dark.bg-primary
-       [:span.navbar-text "Remote Task Executer: " @name]] ]
-     [:br]
-     [:div.container.conatiner_fluid
-      [:div.row
-       [:div.col [upload-form]]]      
-      [:hr]
-      [:div.row
-       [:div.col [status-indicator]]]]]))
+  [:div.container
+   [:div.container
+    [:nav.navbar.navbar-dark.bg-primary
+     [:span.navbar-text "Docker Image Scanner"]] ]
+   [:br]
+   [:div.container.conatiner_fluid
+    [:div.row
+     [:div.col [upload-form]]]      
+    [:hr]
+    [:div.row
+     [:div.col [status-indicator]]]]])

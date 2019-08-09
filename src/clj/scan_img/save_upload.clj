@@ -5,6 +5,8 @@
             [clj-commons-exec :as exec]))
 
 
+;;(def event-channel (async/chan (async/sliding-buffer 10)))
+
 ;;--------------------------------------------------------------
 ;; Process an upload for scanning
 ;; side effects!!!
@@ -12,7 +14,8 @@
 (defn ensure-parent-dir!
   "Check and create parent directory if it doesnt exist.
   Uses canonical path to remove OS dependent path strings.
-  -> seems make-parents fails gracefully returning false in case of error !!!!"
+  -> seems make-parents fails gracefully returning false
+  in case of error !!!!"
   [f]
   (let [can-path (.getCanonicalPath f)
         parent-file (io/as-file (.getParent f))]
@@ -63,7 +66,7 @@
 (defn run-docker-version-command!
   "Run the docker version command and return relults"
   []
-  (let [result @(exec/sh ["docker" "version"])]
+  (let [result @(exec/sh ["java" "-version"])]
     (if (some? (:out result))
       (assoc result :outstrlst (str/split (:out result) #"\n"))
       result)))

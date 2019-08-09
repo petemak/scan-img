@@ -44,7 +44,7 @@
  :progress-tick
  (fn [{:keys [db]} [_ _]]
    (let [tick (:progress-tick db)
-         new-tick (if (< tick 100) (+ tick 10) 0)] 
+         new-tick (if (< tick 100) (+ tick 5) 0)] 
      {:db (assoc db :progress-tick new-tick)})))
 
 

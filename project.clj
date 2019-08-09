@@ -7,10 +7,11 @@
                  [compojure "1.6.1"]
                  [yogthos/config "1.1.2"]
                  [ring "1.7.1"]
+                 [http-kit "2.3.0"] 
                  [cljs-ajax "0.8.0"]
                  [fogus/ring-edn "0.3.0"]
                  [com.taoensso/timbre "4.10.0"]
-                 [ring-sse/ring-sse "0.2.8"]
+                 ;;[ring-sse/ring-sse "0.2.8"]
                  [org.clojars.hozumi/clj-commons-exec "1.2.0"]]
 
   :plugins [[lein-cljsbuild "1.1.7"]
@@ -27,33 +28,32 @@
 
   ;; :ring {:handler scan-img.server/app-routes}
 
-  :profiles
-  {:dev
-   {:dependencies [[binaryage/devtools "0.9.10"]
-                   [peridot "0.5.1"]
-                   [clj-http "3.10.0"]
-                   [ring/ring-mock "0.4.0"]]
-    :plugins      [[lein-figwheel "0.5.18"]]}
-    :prod { }
-    :uberjar {:source-paths ["env/prod/clj"]
+  :main scan-img.server
+  
+  :profiles  {:dev {:dependencies [[binaryage/devtools "0.9.10"]
+                                   [peridot "0.5.1"]
+                                   [clj-http "3.10.0"]
+                                   [ring/ring-mock "0.4.0"]]
+                    :plugins      [[lein-figwheel "0.5.18"]]}
+              :prod { }
+              :uberjar {:source-paths ["env/prod/clj"]
               :omit-source  true
               :main         scan-img.server
               :aot          [scan-img.server]
               :uberjar-name "scan-img.jar"
               :prep-tasks   ["compile" ["cljsbuild" "once" "min"]]}}
 
-  :cljsbuild
-  {:builds
-   [{:id           "dev"
-     :source-paths ["src/cljs"]
-     :figwheel     {:on-jsload "scan-img.core/mount-root"}
-     :compiler     {:main                 scan-img.core
-                    :output-to            "resources/public/js/compiled/app.js"
-                    :output-dir           "resources/public/js/compiled/out"
-                    :asset-path           "js/compiled/out"
-                    :source-map-timestamp true
-                    :preloads             [devtools.preload]
-                    :external-config      {:devtools/config {:features-to-install :all}}}}
+  :cljsbuild  {:builds
+               [{:id           "dev"
+                 :source-paths ["src/cljs"]
+                 :figwheel     {:on-jsload "scan-img.core/mount-root"}
+                 :compiler     {:main                 scan-img.core
+                                :output-to            "resources/public/js/compiled/app.js"
+                                :output-dir           "resources/public/js/compiled/out"
+                                :asset-path           "js/compiled/out"
+                                :source-map-timestamp true
+                                :preloads             [devtools.preload]
+                                :external-config      {:devtools/config {:features-to-install :all}}}}
 
     {:id           "min"
      :source-paths ["src/cljs"]
