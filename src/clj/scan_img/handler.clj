@@ -33,7 +33,7 @@
         resp-data (dissoc file :tempfile)]
 
     (do
-      (fp/file-producer src-file file-name (fp/file-consumer))
+      (fp/reg-upload-event src-file file-name)
       (let [results (fp/run-docker-version-command!)]
         (timbre/info "::-> " results)
         (-> resp-data
@@ -42,6 +42,7 @@
             (assoc :size file-size)
             (assoc :path "-")
             (ok-resp))))))
+
 
 ;;--------------------------------------------------------------
 ;; Progress functions for multipart warapper. Called during uploads.
