@@ -2,7 +2,10 @@
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.core.async :as async]
-            [clj-commons-exec :as exec]))
+            [clj-commons-exec :as exec]
+            [mount.core :as mount :refer [defstate]]))
+
+
 
 
 
@@ -12,7 +15,7 @@
 ;;
 ;; TODO: use channel as input
 ;;--------------------------------------------------------------
-(defn run-docker-version-command!
+(defn- run-docker-version-command!
   "Run the docker version command and return relults"
   []
   (let [result @(exec/sh ["java" "-version"])]
@@ -21,11 +24,28 @@
       result)))
 
 
+
+
+;;--------------------------------------------------------------
+;; Execute docker command
+;; side effects!!!
+;;--------------------------------------------------------------
+(defn run-command!
+  "Run the docker version command and return relults"
+  [data]
+  (let [result @(exec/sh ["docker" "version"])]
+    (if (some? (:out result))
+      (assoc result :outstrlst (str/split (:out result) #"\n"))
+      (assoc result :outstrlst (Throwable->map (:exception result))))))
+
+
+
+
 ;;--------------------------------------------------------------
 ;; Process an upload for scanning
 ;; side effects!!!
 ;;--------------------------------------------------------------
-(defn- ensure-parent-dir!
+(defn ensure-parent-dir!
   "Check and create parent directory if it doesnt exist.
   Uses canonical path to remove OS dependent path strings.
   -> seems make-parents fails gracefully returning false
@@ -56,24 +76,16 @@
 ;;--------------------------------------------------------------
 (defn- fileupload-consumer
   "Accepts file events though an channel and processes
-  them asnynchronously"
-  []
-  (let [in (async/chan (async/sliding-buffer 10))]
-    (async/go-loop [data (async/<! in)]
-      (when data
-        (save-file (:src data) (:file-name data))
-        (recur (async/<! in))))
-    in))
-
-
-(defn- fileupload-consumer2
-  "Accepts file events though an channel and processes
-  them asnynchronously"
+  them asnynchronously
+  input channed expected to contain a map
+  :file-data - file data
+  :file-name - name of file"
   [in]
-  (let [out (async/chan (async/chan))]
+  (let [out (async/chan 10)]
     (async/go-loop [data (async/<! in)]
       (when data
-        (async/>! out (save-file (:src data) (:file-name data)))
+        (if-let [path (save-file (:file-data data) (:file-name data))]
+          (async/>! out))
         (recur (async/<! in))))
     out))
 
@@ -88,7 +100,7 @@
   "Accepts command executiion events though an channel and processes
   them asnynchronously"
   [in]
-  (let [out (async/chan)]
+  (let [out (async/chan 10)]
     (async/go-loop [data (async/<! in)]
       (when data
         (async/>! out (run-command! data))
@@ -104,31 +116,35 @@
 ;;
 ;; TODO: use component to manager lifecycle create and de
 ;;--------------------------------------------------------------
-(defonce input-ch (fileupload-consumer))
+(defn assemble-pipeline
+  "Assembles the chain of processors connected using
+  channels and returns a map with 3 keys for the channels
+  :input-chan, intermediate-chan and :output-chan"
+  []
+  (let [input-chan (async/chan 10)
+        intermediate-chan (fileupload-consumer input-chan)
+        output-chan (commandexec-consumer intermediate-chan)]
+    {:input-chan input-chan
+     :intermediate-chan intermediate-chan
+     :output-chan output-chan}))
+
+
+(defn close-pipeline
+  "Close channels"
+  [chans]
+  (map async/close! (vals chans)))
 
 
 
 ;;--------------------------------------------------------------
-;; Kicks off file processing as soon as ring handler has recieved
-;; upload
+;; Execute docker command
 ;;--------------------------------------------------------------
-(defn reg-upload-event
-  "Register an event on the fileupload channel to signal that
-  a file was uploaded. The consumer on the channel will take
-  approprient action"
-  [file-src file-name]
-  (async/go
-    (async/>! input-ch {:src file-src :file-name file-name})))
+(defstate processing-pipeline
+  :start (assemble-pipeline)
+  :stop (close-pipeline processing-pipeline))
 
 
-(defn reg-upload-event2
-  "Register an event on the fileupload channel to signal that
-  a file was uploaded. The consumer on the channel will take
-  approprient action"
-  [file-src file-name]
-  (let [out-upload (file-upload-consumer2 input-ch)
-        out-executor (commandexec-consumer out-upload)]
-    (async/>!! in-ch {:src file-src :file-name file-name} callback)
-    (<!! out-executor)))
 
-;
+
+
+

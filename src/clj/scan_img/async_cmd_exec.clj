@@ -48,6 +48,7 @@
     (doseq [topic topics]
       ;; Subsribe a channel to a publicatio about a topic
       (async/sub publication topic subs-chan))
+    
     (async/go-loop []
       (when-let [message (async/<! subs-chan)]
         ;; When something comes in on the channel then callback the

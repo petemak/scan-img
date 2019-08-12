@@ -1,8 +1,9 @@
 (ns scan-img.handler
-  (:require [scan-img.save-upload :as fp]
+  (:require [scan-img.save-upload :as fp :refer [processing-pipeline]]
             [compojure.core :refer [GET POST context routes defroutes]]
             [compojure.route :refer [resources]]
             [taoensso.timbre :as timbre]
+            [clojure.core.async :as async]
             [ring.util.response :as ring-response]
             [ring.middleware.reload :refer [wrap-reload]]
             [ring.middleware.params :refer [wrap-params]]
@@ -19,6 +20,19 @@
 
 
 ;;--------------------------------------------------------------
+;; Kicks off file processing as soon as ring handler has recieved
+;; upload
+;;--------------------------------------------------------------
+(defn reg-upload-event
+  "Register an event on the fileupload channel to signal that
+  a file was uploaded. The consumer on the channel will take
+  approprient action"
+  [file-src file-name]
+  (if (async/put! (:input-chan processing-pipeline)
+                  {:file-data file-src :file-name file-name})
+    (async/take! (:output-chan processing-pipeline))))
+
+;;--------------------------------------------------------------
 ;; Process an upload for scanning
 ;; side effects
 ;;--------------------------------------------------------------
@@ -33,8 +47,7 @@
         resp-data (dissoc file :tempfile)]
 
     (do
-      (fp/reg-upload-event src-file file-name)
-      (let [results (fp/run-docker-version-command!)]
+      (let [results (reg-upload-event src-file file-name)]
         (timbre/info "::-> " results)
         (-> resp-data
             (assoc :message (str  "File [" file-name "] saved"))

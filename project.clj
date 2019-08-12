@@ -7,6 +7,7 @@
                  [compojure "1.6.1"]
                  [yogthos/config "1.1.2"]
                  [ring "1.7.1"]
+                 [mount "0.1.16"]
                  [http-kit "2.3.0"] 
                  [cljs-ajax "0.8.0"]
                  [fogus/ring-edn "0.3.0"]
