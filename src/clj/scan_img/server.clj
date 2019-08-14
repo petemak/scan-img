@@ -1,6 +1,7 @@
 (ns scan-img.server
   (:require [clojure.edn :as edn]
             [scan-img.handler :as handler]
+            [mount.core :as mount]
             [config.core :refer [env]]
             [ring.adapter.jetty :as jetty]
             [org.httpkit.server :as httpkit])
@@ -12,6 +13,7 @@
 ;; Reads the application configuration file
 ;;--------------------------------------------------------------
 (defonce httpkit-server (atom nil))
+
 
 ;; -------------------------------------------------------------
 ;; Reads the application configuration file
@@ -29,7 +31,6 @@
 (def cfg (load-cfg "config.edn"))
 
 
-
 ;; -------------------------------------------------------------
 ;; From docs: :timeout is optional, when no timeout,
 ;; stop immediately
@@ -39,8 +40,8 @@
   requests to terminate"
   []
   (when-not (nil? @httpkit-server)
+ ;;   (mount/stop #'scan-img.file-service/file-processor)
     (@httpkit-server :timeout 100)))
-
 
 ;; -------------------------------------------------------------
 ;; Reads the application configuration file
@@ -49,6 +50,7 @@
   (let [port (or (:port cfg) "3000")
         srv (or (:server cfg) :httpkit)]
     (println "Starting '" srv "' server on port '" port "' ....")
+;;    (mount/start #'scan-img.file-service/file-processor)
     (if (= srv :jetty)
       (jetty/run-jetty handler/dev-handler {:port port :join? false})
       (reset! httpkit-server (httpkit/run-server handler/dev-handler {:port port})))))

@@ -1,5 +1,5 @@
 (ns scan-img.handler
-  (:require [scan-img.save-upload :as fp :refer [processing-pipeline]]
+  (:require [scan-img.file-service :as fp]
             [compojure.core :refer [GET POST context routes defroutes]]
             [compojure.route :refer [resources]]
             [taoensso.timbre :as timbre]
@@ -20,19 +20,6 @@
 
 
 ;;--------------------------------------------------------------
-;; Kicks off file processing as soon as ring handler has recieved
-;; upload
-;;--------------------------------------------------------------
-(defn reg-upload-event
-  "Register an event on the fileupload channel to signal that
-  a file was uploaded. The consumer on the channel will take
-  approprient action"
-  [file-src file-name]
-  (if (async/put! (:input-chan processing-pipeline)
-                  {:file-data file-src :file-name file-name})
-    (async/take! (:output-chan processing-pipeline))))
-
-;;--------------------------------------------------------------
 ;; Process an upload for scanning
 ;; side effects
 ;;--------------------------------------------------------------
@@ -41,20 +28,19 @@
    First saves and then posts uploaded event on processing quest"
   [params]
   (let [file (get params "file")
-        src-file (:tempfile file)
+        file-data (:tempfile file)
         file-name (:filename file)
         file-size (:size file)
         resp-data (dissoc file :tempfile)]
-
-    (do
-      (let [results (reg-upload-event src-file file-name)]
-        (timbre/info "::-> " results)
-        (-> resp-data
-            (assoc :message (str  "File [" file-name "] saved"))
-            (assoc :cmd-results results)
-            (assoc :size file-size)
-            (assoc :path "-")
-            (ok-resp))))))
+    (timbre/info "::-> calling FS with file : " file-data)    
+    (let [results (fp/reg-upload-event file-data file-name)]
+      (timbre/info "::-> reuslts from FS: " results)
+      (-> resp-data
+          (assoc :message (str  "File [" file-name "] saved"))
+          (assoc :cmd-results results)
+          (assoc :size file-size)
+          (assoc :path "-")
+          (ok-resp)))))
 
 
 ;;--------------------------------------------------------------
@@ -101,4 +87,3 @@
 ;; incomming requests
 ;;--------------------------------------------------------------
 (def dev-handler (-> #'handler wrap-reload))
-
