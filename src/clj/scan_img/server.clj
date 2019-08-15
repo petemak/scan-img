@@ -1,5 +1,6 @@
 (ns scan-img.server
   (:require [clojure.edn :as edn]
+            [scan-img.utils :as utils]
             [scan-img.handler :as handler]
             [mount.core :as mount]
             [config.core :refer [env]]
@@ -15,20 +16,11 @@
 (defonce httpkit-server (atom nil))
 
 
-;; -------------------------------------------------------------
-;; Reads the application configuration file
-;;--------------------------------------------------------------
-(defn load-cfg
-  "Load appliction configuration"
-  [file-name]
-  (edn/read-string (slurp file-name)))
-
-
 
 ;; -------------------------------------------------------------
 ;; Reads the application configuration file
 ;;--------------------------------------------------------------
-(def cfg (load-cfg "config.edn"))
+(def cfg (utils/edn-from-home))
 
 
 ;; -------------------------------------------------------------

@@ -39,7 +39,7 @@
           (assoc :message (str  "File [" file-name "] saved"))
           (assoc :cmd-results results)
           (assoc :size file-size)
-          (assoc :path "-")
+          (assoc :path (:cannonical-path results))
           (ok-resp)))))
 
 

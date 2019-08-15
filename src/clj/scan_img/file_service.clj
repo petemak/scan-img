@@ -1,32 +1,17 @@
 (ns scan-img.file-service
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
+            [scan-img.utils :as utils]
             [clojure.core.async :as async]
             [clj-commons-exec :as exec]
             [mount.core :as mount :refer [defstate]]))
 
 ;;--------------------------------------------------------------
-;; Channels fo asynchronous handling
+;; Atom holds in and output channels for file service
 ;;--------------------------------------------------------------
 (def processor (atom nil))
 
 
-;;--------------------------------------------------------------
-;; Process an upload for scanning
-;; side effects!!!
-;;--------------------------------------------------------------
-(defn ensure-parent-dir!
-  "Check and create parent directory if it doesnt exist.
-  Uses canonical path to remove OS dependent path strings.
-  -> seems make-parents fails gracefully returning false
-  in case of error !!!!"
-  [f]
-  (let [can-path (.getCanonicalPath f)
-        parent-file (io/as-file (.getParent f))]
-    
-    (if (not (.isDirectory parent-file))
-      (io/make-parents can-path))
-    can-path))
 
 ;;--------------------------------------------------------------
 ;; consumer for file processing
@@ -34,21 +19,30 @@
 (defn- save-file
   "Save file to resources/public/uploads. "
   [src file-name]
-  (let [target (io/file "resources" "public" "uploads" file-name)
-        can-path (ensure-parent-dir! target)]   
+  (let [unique-name (utils/unique-str file-name)
+        target (io/file "resources" "public" "uploads" unique-name)
+        can-path (utils/ensure-parent-dir! target)]   
     (io/copy src target)
     can-path))
 
 
 
 ;;--------------------------------------------------------------
-;; Execute docker command
+;; Executes the docker command. 
 ;; side effects!!!
 ;;--------------------------------------------------------------
 (defn run-command!
-  "Run the docker version command and return relults"
+  "Run the docker version command and return relults
+  shell command expected to be provided in config.edn
+  with the key :executable-cmd.
+
+  Example:
+  {:name \"Docker Image Scanner\"
+   :executable-cmd [\"docker\" \"version\"]}:
+  "
   [data]
-  (let [result @(exec/sh ["docker" "version"])]
+  (let [command (:executable-cmd (utils/edn-from-home))
+        result @(exec/sh command {:shutdown true})]
     (if (some? (:out result))
       (assoc result :outstrlst (str/split (:out result) #"\n"))
       (assoc {} :outstrlst (map str (Throwable->map (:exception result)))))))
@@ -68,7 +62,9 @@
   (async/go-loop [data (async/<! in)]
     (when data
       (when-let [path (save-file (:file-data data) (:file-name data))]
-         (async/>! out (run-command! data)))
+        (let [cmd-output (run-command! (assoc data :cannonical-path path))
+              results (assoc cmd-output :cannonical-path path)]
+          (async/>! out results)))
       (recur (async/<! in)))))
 
 

@@ -1,3 +1,0 @@
-{:name "Docker Image Scanner"
- :port 3000
- :mode :dev}

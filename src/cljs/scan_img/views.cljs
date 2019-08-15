@@ -83,7 +83,7 @@
   [(str "Message: " (:message rsp))
    (str "Filename: " (:filename rsp))
    (str "Size: " (:size rsp))
-   (str "Path: " (:path rsp))])
+   (str "Location: " (:path rsp))])
 
 (defn handle-response-ok
   "Handle a successful response. The parameter will contain
