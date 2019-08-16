@@ -4,7 +4,11 @@
             [scan-img.utils :as utils]
             [clojure.core.async :as async]
             [clj-commons-exec :as exec]
+            [taoensso.timbre :as timbre]
             [mount.core :as mount :refer [defstate]]))
+
+
+(timbre/set-level! :debug)
 
 ;;--------------------------------------------------------------
 ;; Atom holds in and output channels for file service
@@ -28,6 +32,50 @@
 
 
 ;;--------------------------------------------------------------
+;; Utility function for extracting results from
+;; an exception
+;;--------------------------------------------------------------
+(defn exception->strlst
+  "Given an exception object like
+    {:exit -35545
+     :exception #error {:cause \"error=2, No such file or directory\"
+                        :via []  .... }}
+    then will generate a list of strings"
+  [e]
+  (let [m (Throwable->map e)]
+    (into [] (map str (:via m)))))
+
+(defn remove-exception
+  [result]
+  (dissoc result :exception ))
+
+
+;;--------------------------------------------------------------
+;; Utility functions for extracting results from
+;; a command execution
+;;--------------------------------------------------------------
+(defn execresult->strlist
+  "Converts clj-commons-exec results to a list of strings
+  The expcted result map looks as follows in case an
+  exception happened:
+  
+  {:exit -559038737,
+   :out nil,
+   :err nil,
+   :exception #error ...}"
+  [result]
+  (timbre/info "::->  execresult->strlist: " result)
+  (cond
+    (nil? result) (assoc {} :outstrlst ["Unknown executaion error!"
+                                        "Examine server logs e.g. figwheel_server.log"])
+    (some? (:out result)) (assoc result :outstrlst (str/split (:out result) #"\n"))
+    (some? (:err result)) (assoc result :outstrlst (str/split (:err result) #"\n"))
+    (some? (:exception result)) (assoc (dissoc result :exception)
+                                       :outstrlst
+                                       (exception->strlst (:exception result)))))
+
+
+;;--------------------------------------------------------------
 ;; Executes the docker command. 
 ;; side effects!!!
 ;;--------------------------------------------------------------
@@ -43,9 +91,8 @@
   [data]
   (let [command (:executable-cmd (utils/edn-from-home))
         result @(exec/sh command {:shutdown true})]
-    (if (some? (:out result))
-      (assoc result :outstrlst (str/split (:out result) #"\n"))
-      (assoc {} :outstrlst (map str (Throwable->map (:exception result)))))))
+    (timbre/info "::==> run-command! results: " result)
+    (execresult->strlist result)))
 
 
 ;;--------------------------------------------------------------

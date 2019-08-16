@@ -89,14 +89,17 @@
   "Handle a successful response. The parameter will contain
   data supplie to the response object by the server"
   [resp]
+
+  (println "::==> handle-reponse-ok: rsp: " resp)
+  
   (let [rsp (cr/read-string resp)
         upl-messages (upload-messages rsp)
         cmd-messages (:cmd-results rsp)   
         sts (status "Upload succeeded"
                     upl-messages
                     cmd-messages)]
-    (println "::-> handle-reponse-ok: upl " upl-messages)
-    (println "::-> handle-reponse-ok: cmd " cmd-messages)
+    (println "::==> handle-reponse-ok: upload nessage " upl-messages)
+    (println ":==> handle-reponse-ok: cmd message" cmd-messages)
     (rf/dispatch [:reset-ticker 100])
     (rf/dispatch [:upload-status sts])))
 
