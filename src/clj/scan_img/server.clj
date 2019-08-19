@@ -2,7 +2,6 @@
   (:require [clojure.edn :as edn]
             [scan-img.utils :as utils]
             [scan-img.handler :as handler]
-            [mount.core :as mount]
             [config.core :refer [env]]
             [ring.adapter.jetty :as jetty]
             [org.httpkit.server :as httpkit])

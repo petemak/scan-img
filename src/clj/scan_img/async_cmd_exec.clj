@@ -74,3 +74,31 @@
                         :message message})))
 
 
+(defn read-all!!
+  "Loops reading from channel ch until its closed. Returns
+  content in a collection"
+  [ch]
+  (loop [acc []]
+    (if-let [x (async/<!! ch)]
+      (recur (conj acc x))
+      acc)))
+
+
+(defn put-all!!
+  "Takes a channel and a seq and writes all
+  contents of the seq to the channel"
+  [ch col]
+  (doseq [x col]
+    (async/>!! ch x))
+  (async/close! ch))
+
+
+(defn go-inc
+  "Demo how efficient go blocks are. Implements addition by
+  iterating on a function that cretes a go bloch each time.
+  The go block increments x. Return nth"
+  [x n]
+  (async/<!! (nth (iterate #(async/go (inc (async/<! %)))
+                           (async/go x))
+                  n)))
+

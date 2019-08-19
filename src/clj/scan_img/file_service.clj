@@ -4,8 +4,7 @@
             [scan-img.utils :as utils]
             [clojure.core.async :as async]
             [clj-commons-exec :as exec]
-            [taoensso.timbre :as timbre]
-            [mount.core :as mount :refer [defstate]]))
+            [taoensso.timbre :as timbre]))
 
 
 (timbre/set-level! :debug)
@@ -86,14 +85,20 @@
 
   Example:
   {:name \"Docker Image Scanner\"
-   :executable-cmd [\"docker\" \"version\"]}:
-  "g
+   :executable-cmd [\"docker\" \"version\"]}"
   [data]
-  (let [config (utils/read-config)
-        command (:executable-cmd config)        
-        result @(exec/sh command {:shutdown true})]
-    (timbre/info "::==> run-command! results: " result)
-    (execresult->strlist result)))
+  (if-let [config (utils/read-config)]
+    (let [command (:executable-cmd config)
+          result @(exec/sh command {:shutdown true})] 
+      (timbre/info "::==> run-command! results: " result)
+      (execresult->strlist result))
+    (do
+      (timbre/info "::==> command execution failed..")      
+      (execresult->strlist {:exit nil
+                            :out nil
+                            :err (str  "Command execution failed!\n"
+                                       "Make sure \nconfig.edn\n is in the expected path")
+                            :exception nil}))))
 
 
 ;;--------------------------------------------------------------
