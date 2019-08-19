@@ -87,9 +87,10 @@
   Example:
   {:name \"Docker Image Scanner\"
    :executable-cmd [\"docker\" \"version\"]}:
-  "
+  "g
   [data]
-  (let [command (:executable-cmd (utils/edn-from-home))
+  (let [config (utils/read-config)
+        command (:executable-cmd config)        
         result @(exec/sh command {:shutdown true})]
     (timbre/info "::==> run-command! results: " result)
     (execresult->strlist result)))
