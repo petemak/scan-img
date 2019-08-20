@@ -101,6 +101,41 @@
                             :exception nil}))))
 
 
+(defn format-command
+  "Expects a command in the form [\"mv\" \"%s /antoher/path/\" ]"
+  [command args]
+  (map format command args))
+
+
+(defn run-commands!
+  "Run the docker version command and return relults
+  shell command expected to be provided in config.edn
+  with the key :executable-cmd.
+
+  Example:
+  {:name \"Docker Image Scanner\"
+   :executable-cmd [\"docker\" \"version\"]}"
+  [data]
+  (if-let [config (utils/read-config)]
+    (let [commands (:executable-cmd config)]
+      (loop [cmds commands
+             res nil]
+        (if (empty? cmds)
+          (execresult->strlist res)
+          (do
+            (let [cmd (format-command (first cmds) (:cannonical-path data))
+                  result @(exec/sh cmd {:shutdown true})]
+               (timbre/info "::==> run-command! results: " result)
+               (recur (rest cmds) result))))))
+    (do
+      (timbre/info "::==> command execution failed..")      
+      (execresult->strlist {:exit nil
+                            :out nil
+                            :err (str  "Command execution failed!\n"
+                                       "Make sure \nconfig.edn\n is in the expected path")
+                            :exception nil}))))
+
+
 ;;--------------------------------------------------------------
 ;; Start consumer for file processing
 ;;--------------------------------------------------------------
