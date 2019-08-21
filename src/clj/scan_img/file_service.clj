@@ -124,7 +124,7 @@
                (println "::==> run-command! executed --[" cmd "]-- result: " result)              
                (timbre/info "::==> run-command! executed --[" cmd "]-- result: " result)
                (timbre/info "::==> Config found: " (utils/read-config))                     
-               (recur (rest cmds) result))))))
+               (recur (rest cmds) (merge res result)))))))
     (do
       (timbre/info "::==> command execution failed. config.edn not dound!")      
       (execresult->strlist {:exit nil

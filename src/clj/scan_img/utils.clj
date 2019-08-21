@@ -104,15 +104,13 @@
 ;; For config files provided as EDN files in user home
 ;;--------------------------------------------------------------
 (defn format-lst-map
-  "given a string list with palce-holders
-  {{xyz}}, replace these with values in the
+  "given a string list with place-holders
+  [\"ls\" \"al {{xyz}}\"], replace these with values in the
   context mam {:xyz \"blab\"}"
   [str-lst ctx-map]
-  (loop [slst str-lst
-         ret []]
-    (println "string to replace: " str)
+  (let [new-str (selmer/render (second str-lst) ctx-map)]
+    (println "string to replace: " str-lst)
     (println "context map: " ctx-map)
-    (if (empty? slst)
-      ret
-      (recur (rest slst) (conj ret (selmer/render (first slst) ctx-map))))))
+    (assoc str-lst 1 new-str)))
+
 
