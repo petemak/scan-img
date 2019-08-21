@@ -1,7 +1,8 @@
 (ns scan-img.utils
   (:require [clojure.edn :as edn]
             [clojure.java.io :as io]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [selmer.parser :as selmer]))
 
 
 ;;--------------------------------------------------------------
@@ -64,10 +65,11 @@
   the resources/ directory or the root directory of the project."
   [name]
   (try
-    (-> name
-        (io/resource)
-        (read-edn-file))
+    (when-let [r (io/resource  name)]
+         (edn/read-string (slurp r)))
     (catch Exception e
+      (println "Erorr reading " name)
+      (println e)
       nil)))
 
 ;;--------------------------------------------------------------
@@ -88,8 +90,29 @@
    (edn-from-home "config.edn")))
 
 
+;;--------------------------------------------------------------
+;; For config files provided as EDN files in user home
+;;--------------------------------------------------------------
 (defn read-config
   []
   (if-let [cfg (edn-from-resource-path "config.edn")]
     cfg
     (edn-from-home)))
+
+
+;;--------------------------------------------------------------
+;; For config files provided as EDN files in user home
+;;--------------------------------------------------------------
+(defn format-lst-map
+  "given a string list with palce-holders
+  {{xyz}}, replace these with values in the
+  context mam {:xyz \"blab\"}"
+  [str-lst ctx-map]
+  (loop [slst str-lst
+         ret []]
+    (println "string to replace: " str)
+    (println "context map: " ctx-map)
+    (if (empty? slst)
+      ret
+      (recur (rest slst) (conj ret (selmer/render (first slst) ctx-map))))))
+

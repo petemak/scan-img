@@ -101,34 +101,32 @@
                             :exception nil}))))
 
 
-(defn format-command
-  "Expects a command in the form [\"mv\" \"%s /antoher/path/\" ]"
-  [command args]
-  (map format command args))
-
-
 (defn run-commands!
   "Run the docker version command and return relults
   shell command expected to be provided in config.edn
   with the key :executable-cmd.
-
   Example:
   {:name \"Docker Image Scanner\"
    :executable-cmd [\"docker\" \"version\"]}"
   [data]
   (if-let [config (utils/read-config)]
+    
     (let [commands (:executable-cmd config)]
+      (println "::==> run-commands!  commands found: " commands)
       (loop [cmds commands
              res nil]
+        (println "::==> run-commands! command list --[" cmds "]--")                      
         (if (empty? cmds)
-          (execresult->strlist res)
+          (execresult->strlist  {:err "No commands to run - ensure config.edn is in you home"})
           (do
-            (let [cmd (format-command (first cmds) (:cannonical-path data))
+            (let [cmd (utils/format-lst-map (first cmds) data)
                   result @(exec/sh cmd {:shutdown true})]
-               (timbre/info "::==> run-command! results: " result)
+               (println "::==> run-command! executed --[" cmd "]-- result: " result)              
+               (timbre/info "::==> run-command! executed --[" cmd "]-- result: " result)
+               (timbre/info "::==> Config found: " (utils/read-config))                     
                (recur (rest cmds) result))))))
     (do
-      (timbre/info "::==> command execution failed..")      
+      (timbre/info "::==> command execution failed. config.edn not dound!")      
       (execresult->strlist {:exit nil
                             :out nil
                             :err (str  "Command execution failed!\n"
@@ -150,7 +148,7 @@
   (async/go-loop [data (async/<! in)]
     (when data
       (when-let [path (save-file (:file-data data) (:file-name data))]
-        (let [cmd-output (run-command! (assoc data :cannonical-path path))
+        (let [cmd-output (run-commands! (assoc data :cannonical-path path))
               results (assoc cmd-output :cannonical-path path)]
           (async/>! out results)))
       (recur (async/<! in)))))
@@ -195,4 +193,3 @@
   (if (async/>!! (channel :input-chan)
                   {:file-data file-src :file-name file-name})
     (async/<!! (channel :output-chan))))
-

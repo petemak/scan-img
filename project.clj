@@ -5,6 +5,7 @@
                  [reagent "0.8.1"]
                  [re-frame "0.10.8"]
                  [compojure "1.6.1"]
+                 [selmer "1.12.13"]
                  [yogthos/config "1.1.2"]
                  [ring "1.7.1"]
                  ;;[mount "0.1.16"]
