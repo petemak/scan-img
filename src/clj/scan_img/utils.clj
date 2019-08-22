@@ -103,14 +103,14 @@
 ;;--------------------------------------------------------------
 ;; For config files provided as EDN files in user home
 ;;--------------------------------------------------------------
-(defn format-lst-map
+(defn replace-placeholder-from-map
   "given a string list with place-holders
-  [\"ls\" \"al {{xyz}}\"], replace these with values in the
+  [\"command\" \"params {{xyz}}\"], replace these with values in the
   context mam {:xyz \"blab\"}"
-  [str-lst ctx-map]
-  (let [new-str (selmer/render (second str-lst) ctx-map)]
-    (println "string to replace: " str-lst)
-    (println "context map: " ctx-map)
-    (assoc str-lst 1 new-str)))
+  [ctx-map str-lst]
+  (let [modified-str (selmer/render (second str-lst) ctx-map)]
+    (assoc str-lst 1 modified-str)))
+
+
 
 

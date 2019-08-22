@@ -75,53 +75,41 @@
 
 
 ;;--------------------------------------------------------------
-;; Executes the docker command. 
+;; Replace the palce holders with actual values
 ;; side effects!!!
 ;;--------------------------------------------------------------
-(defn run-command!
-  "Run the docker version command and return relults
-  shell command expected to be provided in config.edn
-  with the key :executable-cmd.
+(defn process-command-params
+  "Given a string list with place-holders
+  [[\"docker\" \"load {{cannonical-path}}\"]
+   [\"docker\" \"run --rm {{image-name}}\"], replace these with values in the
+  context map {:cannonic-path \"/uploads/image.pkz\"}"  
+  [commands data]
+  (let [pf (partial utils/replace-placeholder-from-map data)]
+    (map pf commands)))
 
-  Example:
-  {:name \"Docker Image Scanner\"
-   :executable-cmd [\"docker\" \"version\"]}"
-  [data]
-  (if-let [config (utils/read-config)]
-    (let [command (:executable-cmd config)
-          result @(exec/sh command {:shutdown true})] 
-      (timbre/info "::==> run-command! results: " result)
-      (execresult->strlist result))
-    (do
-      (timbre/info "::==> command execution failed..")      
-      (execresult->strlist {:exit nil
-                            :out nil
-                            :err (str  "Command execution failed!\n"
-                                       "Make sure \nconfig.edn\n is in the expected path")
-                            :exception nil}))))
-
-
+;;--------------------------------------------------------------
+;; Run commands. 
+;; side effects!!!
+;;--------------------------------------------------------------
 (defn run-commands!
-  "Run the docker version command and return relults
-  shell command expected to be provided in config.edn
+  "Run shell command and return relults. The shell
+  commands expected to be provided in config.edn
   with the key :executable-cmd.
   Example:
   {:name \"Docker Image Scanner\"
-   :executable-cmd [\"docker\" \"version\"]}"
+   :executable-cmd [[\"command-1\" \"params-1\"]
+                    [\"command-2\" \"params-2\"]]}"
   [data]
   (if-let [config (utils/read-config)]
     
-    (let [commands (:executable-cmd config)]
-      (println "::==> run-commands!  commands found: " commands)
+    (let [commands (process-command-params (:executable-cmd config) data)]
       (loop [cmds commands
              res nil]
-        (println "::==> run-commands! command list --[" cmds "]--")                      
         (if (empty? cmds)
-          (execresult->strlist  {:err "No commands to run - ensure config.edn is in you home"})
+          (execresult->strlist res)
           (do
-            (let [cmd (utils/format-lst-map (first cmds) data)
+            (let [cmd (first cmds)
                   result @(exec/sh cmd {:shutdown true})]
-               (println "::==> run-command! executed --[" cmd "]-- result: " result)              
                (timbre/info "::==> run-command! executed --[" cmd "]-- result: " result)
                (timbre/info "::==> Config found: " (utils/read-config))                     
                (recur (rest cmds) (merge res result)))))))
