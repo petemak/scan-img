@@ -2,7 +2,8 @@
   (:require [clojure.edn :as edn]
             [clojure.java.io :as io]
             [clojure.string :as str]
-            [selmer.parser :as selmer]))
+            [selmer.parser :as selmer]
+            [taoensso.timbre :as timbre]))
 
 
 ;;--------------------------------------------------------------
@@ -103,7 +104,7 @@
 ;;--------------------------------------------------------------
 ;; For config files provided as EDN files in user home
 ;;--------------------------------------------------------------
-(defn replace-placeholder-from-map
+(defn replace-placeholder-from-map-old
   "given a string list with place-holders
   [\"command\" \"params {{xyz}}\"], replace these with values in the
   context mam {:xyz \"blab\"}"
@@ -111,6 +112,111 @@
   (let [modified-str (selmer/render (second str-lst) ctx-map)]
     (assoc str-lst 1 modified-str)))
 
+(defn replace-placeholder-from-map
+  "given a string list with place-holders
+  [\"command\" \"params {{xyz}}\"], replace these with values in the
+  context mam {:xyz \"blab\"}"
+  [ctx-map str-lst]
+  (map #(selmer/render % ctx-map) str-lst))
 
 
+
+
+;;--------------------------------------------------------------
+;; Utility function for extracting results from
+;; an exception
+;;--------------------------------------------------------------
+(defn exception->strlst
+  "Given an exception object like
+    {:exit -35545
+     :exception #error {:cause \"error=2, No such file or directory\"
+                        :via []  .... }}
+    then will generate a list of strings"
+  [e]
+  (let [m (Throwable->map e)]
+    (into [] (map str (:via m)))))
+
+
+
+;;--------------------------------------------------------------
+;; Utility functions for extracting results from
+;; a command execution
+;;--------------------------------------------------------------
+(defn concat-vals
+  "Concatenates a value to the existing one in m witk key k"
+  [m k v2]
+  (let [v1 (get m k)]
+    (if (some? v1)
+      (assoc m k (into [] (concat v1 ["------------------------------"] v2)))
+      (assoc m k v2))))
+
+
+;;--------------------------------------------------------------
+;; Utility functions for extracting results from
+;; a command execution
+;;--------------------------------------------------------------
+(defn out-map
+  "Create a success message object like
+    {:exit 0
+     :out \"\"
+     :err
+     :exception nil}}"
+  [result accum]
+  (-> accum
+      (assoc :message "Command executed")
+      (concat-vals :outstrlst (str/split (:out result) #"\n"))))
+
+;;--------------------------------------------------------------
+;; Utility functions for extracting results from
+;; a command execution
+;;--------------------------------------------------------------
+(defn err-map
+  "Create an , given an err result string like
+    {:exit -35545
+     :err  \"Execution results..\"}}"
+  [result accum]
+  (-> accum
+      (assoc :message "Commands succesfuly executed...")
+      (concat-vals :outstrlst (str/split (:err result) #"\n"))))
+
+
+;;--------------------------------------------------------------
+;; Utility functions for extracting results from
+;; a command execution
+;;--------------------------------------------------------------
+(defn exc-map
+  "Create an execption result, given a map with an execption object like
+    {:exit -35545
+     :exception #error {:cause \"error=2, No such file or directory\"
+                        :via []  .... }}"
+  [result accum]
+  (-> accum
+      (assoc :message (:err result))
+      (concat-vals :outstrlst (exception->strlst (:exception result)))))
+
+
+
+
+
+;;--------------------------------------------------------------
+;; Utility functions for extracting results from
+;; a command execution
+;;--------------------------------------------------------------
+(defn execresult->strlist
+  "Converts clj-commons-exec results to a list of strings
+  The expcted result map looks as follows in case an
+  exception happened:
+  
+  {:exit -559038737,
+   :out nil,
+   :err \"ls: illegal option...\",
+   :exception #error {...}}"
+  [result accum]
+  (timbre/info "::->  execresult->strlist: " result)
+  (cond
+    (nil? result) (assoc accum :outstrlst ["Unknown executaion error!"
+                                        "Examine server logs e.g. figwheel_server.log"])
+    (some? (:out result)) (out-map result accum)
+    (some? (:err result)) (err-map result accum)
+    (some? (:exception result)) (exc-map result accum)))
 

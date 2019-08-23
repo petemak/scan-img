@@ -30,49 +30,6 @@
 
 
 
-;;--------------------------------------------------------------
-;; Utility function for extracting results from
-;; an exception
-;;--------------------------------------------------------------
-(defn exception->strlst
-  "Given an exception object like
-    {:exit -35545
-     :exception #error {:cause \"error=2, No such file or directory\"
-                        :via []  .... }}
-    then will generate a list of strings"
-  [e]
-  (let [m (Throwable->map e)]
-    (into [] (map str (:via m)))))
-
-(defn remove-exception
-  [result]
-  (dissoc result :exception ))
-
-
-;;--------------------------------------------------------------
-;; Utility functions for extracting results from
-;; a command execution
-;;--------------------------------------------------------------
-(defn execresult->strlist
-  "Converts clj-commons-exec results to a list of strings
-  The expcted result map looks as follows in case an
-  exception happened:
-  
-  {:exit -559038737,
-   :out nil,
-   :err nil,
-   :exception #error ...}"
-  [result]
-  (timbre/info "::->  execresult->strlist: " result)
-  (cond
-    (nil? result) (assoc {} :outstrlst ["Unknown executaion error!"
-                                        "Examine server logs e.g. figwheel_server.log"])
-    (some? (:out result)) (assoc result :outstrlst (str/split (:out result) #"\n"))
-    (some? (:err result)) (assoc result :outstrlst (str/split (:err result) #"\n"))
-    (some? (:exception result)) (assoc (dissoc result :exception)
-                                       :outstrlst
-                                       (exception->strlst (:exception result)))))
-
 
 ;;--------------------------------------------------------------
 ;; Replace the palce holders with actual values
@@ -104,22 +61,22 @@
     
     (let [commands (process-command-params (:executable-cmd config) data)]
       (loop [cmds commands
-             res nil]
+             accum nil]
         (if (empty? cmds)
-          (execresult->strlist res)
+          accum
           (do
             (let [cmd (first cmds)
                   result @(exec/sh cmd {:shutdown true})]
                (timbre/info "::==> run-command! executed --[" cmd "]-- result: " result)
                (timbre/info "::==> Config found: " (utils/read-config))                     
-               (recur (rest cmds) (merge res result)))))))
+               (recur (rest cmds) (utils/execresult->strlist result accum)))))))
     (do
       (timbre/info "::==> command execution failed. config.edn not dound!")      
-      (execresult->strlist {:exit nil
-                            :out nil
-                            :err (str  "Command execution failed!\n"
+      (utils/execresult->strlist {:exit nil
+                                  :out nil
+                                  :err (str  "Command execution failed!\n"
                                        "Make sure \nconfig.edn\n is in the expected path")
-                            :exception nil}))))
+                                  :exception nil}))))
 
 
 ;;--------------------------------------------------------------

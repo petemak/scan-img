@@ -65,11 +65,13 @@
         [:h4 "Scan results"])
 
       (let [cmd-messages (:cmd-messages status)
+            output-msg (:message cmd-messages)
             output-list (:outstrlst cmd-messages)]
            
       
         (if (some? cmd-messages)
           [:ul
+           [:li {:key "msg"}  (str ":message " (:message cmd-messages))]
            [:li {:key "exit"}  (str ":exit " (:exit cmd-messages))]
            [:li {:key "err"} (str ":err " (:err cmd-messages))]
            (for [out output-list]
