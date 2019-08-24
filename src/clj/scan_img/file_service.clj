@@ -67,8 +67,9 @@
           (do
             (let [cmd (first cmds)
                   result @(exec/sh cmd {:shutdown true})]
-               (timbre/info "::==> run-command! executed --[" cmd "]-- result: " result)
-               (timbre/info "::==> Config found: " (utils/read-config))                     
+              (timbre/info "::==> rund-command! with config found: " config)
+              (timbre/info "::==> run-command! executed --[" cmd "]-- result: " result)
+
                (recur (rest cmds) (utils/execresult->strlist result accum)))))))
     (do
       (timbre/info "::==> command execution failed. config.edn not dound!")      

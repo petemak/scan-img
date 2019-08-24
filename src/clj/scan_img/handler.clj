@@ -32,9 +32,11 @@
         file-name (:filename file)
         file-size (:size file)
         resp-data (dissoc file :tempfile)]
-    (timbre/info "::-> calling FS with file : " file-data)    
+    (timbre/info "::--> process-scan-upload - params: " params)
+    (timbre/info "::--> process-scan-upload - :upload-type : " (:upload-type params))
+    
     (let [results (fp/reg-upload-event file-data file-name)]
-      (timbre/info "::-> reuslts from FS: " results)
+      (timbre/info "::--> process-scan-upload - reuslts from file service: " results)
       (-> resp-data
           (assoc :message (str  "File [" file-name "] saved"))
           (assoc :cmd-results results)
@@ -59,27 +61,34 @@
 ;;--------------------------------------------------------------
 ;; web site routes for handling web site
 ;;--------------------------------------------------------------
-(defroutes site-handler
+(defroutes site-routes
   (GET "/" [] (ring-response/resource-response "index.html" {:root "public"}))
   (resources "/"))
 
 
 ;;--------------------------------------------------------------
 ;; upload routes for handling payload
+;;
+;; NOTE: we are destructuring using :params which is filled in
+;;       by the wrap-params-middleware.
+;;       :params combines both :query-params and :form-params
 ;;--------------------------------------------------------------
-(defroutes upload-handler
-  (-> (POST "/upload/scan" {params :params} (process-scan-upload params))
+(defroutes upload-routes
+  (-> (POST "/upload/scan" {params :params} (process-scan-upload params))))
+
+(def wrapped-upload-routes
+  (-> upload-routes
       (wrap-edn-params)
-      (wrap-params)
-      (wrap-multipart-params  {:progress-fn progress-fn})))
+      (wrap-multipart-params {:progress-fn progress-fn})
+      (wrap-params)))
 
 
 ;;--------------------------------------------------------------
 ;; Appliction routes combining site nd upload routes
 ;;--------------------------------------------------------------
 (def handler
-  (routes site-handler
-          upload-handler))
+  (routes site-routes
+          wrapped-upload-routes))
 
 
 ;;--------------------------------------------------------------

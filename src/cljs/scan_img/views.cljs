@@ -7,6 +7,7 @@
 
 
 (defonce tick-status (atom {:tick false}))
+(defonce selected-upload-type (atom {:upload-type "image"}))
 
 ;;----------------------------------------------------------
 ;; Ticker event to drive progress monitor
@@ -122,15 +123,19 @@
 ;;-----------------------------------------------------------
 ;; Handler for upload-button
 ;;-----------------------------------------------------------
-(defn upload-file [element-id]
-  (let [el (.getElementById js/document element-id)
-        name (.-name el)
-        file (aget (.-files el) 0)
+(defn upload-file [file-id file-type]
+  (let [file-el (.getElementById js/document file-id)
+        file-name (.-name file-el)
+        file-data (aget (.-files file-el) 0)
+
+
         form-data (doto
-                      (js/FormData.)
-                      (.append name file))
-        sts (status (str  "Uploading file '" name "'") [] nil)]
-    (when (some? file)
+                    (js/FormData.)
+                    (.append file-name file-data)
+                    (.append "upload-type" (:upload-type file-type)))
+        
+        sts (status (str  "Uploading file '" file-name "' with type '" @selected-upload-type "'") [] nil)]
+    (when (some? file-data)
       (POST "/upload/scan" {:body form-data
                             ;; :response-format :json
                             ;; :keywords? true
@@ -164,12 +169,32 @@
                :on-click #(rf/dispatch [:reset-ticker 0])
                :on-change #(rf/dispatch [:file-selected (-> %
                                                             .-target
-                                                            ;;.-value
                                                             .-files
                                                             (aget 0)
                                                             .-name)])}]
       [:label {:class "custom-file-label"
                :for  "file"} @(rf/subscribe [:file-selected])]]]
+    [:hr]
+    [:div {:class "form-group"}
+     [:label "Upload Type"]
+     [:div {:class "form-check"}
+      [:label {:class "form-check-label"}
+       [:input {:type "radio"
+                :class "form-check-input"
+                :id "upload-type-image"
+                :name "upload-type"
+                :value "image"
+                :checked true
+                :on-click  #(swap! selected-upload-type assoc :upload-type "image")}] "Docker Image"]]
+     [:div {:class "form-check"}
+      [:label {:class "form-check-label"}
+       [:input {:type "radio"
+                :class "form-check-input"
+                :id "upload-type-command"
+                :name "upload-type"
+                :value "commands"
+                :on-click #(swap! selected-upload-type assoc :upload-type "commands")}] "Command file"]]]
+    [:hr]  
     [:div {:class "form-group"}
      [:button {:type "reset"
                :class "btn btn-danger float-left"
@@ -177,7 +202,7 @@
      
      [:button {:type "button"
                :class "btn btn-primary float-right"
-               :on-click #(upload-file "file")} "Scan image..."]]]])
+               :on-click #(upload-file "file" @selected-upload-type)} "Start..."]]]])
 
 
 
@@ -198,3 +223,6 @@
     [:hr]
     [:div.row
      [:div.col [status-indicator]]]]])
+
+
+

@@ -69,5 +69,14 @@
      {:db (assoc ndb :progress-tick 0)})))
 
 
+;;-----------------------------------------------------------
+;; Domino 2: comupte effect of selecting the upload type 
+;;-----------------------------------------------------------
+(rf/reg-event-fx
+ :upload-type 
+ (fn [{:keys [db]} [_ val]]
+   {:db (assoc db :upload-type val)}))
+
+
 
 

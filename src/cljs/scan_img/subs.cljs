@@ -44,3 +44,12 @@
  :reset-form
  (fn [db]
    (str (:file-selected db))))
+
+
+;;-----------------------------------------------------------
+;; Domino 4: querry effect of resetting the form
+;;-----------------------------------------------------------
+(rf/reg-sub
+ :upload-type
+ (fn [db]
+   (:upload-type db)))
