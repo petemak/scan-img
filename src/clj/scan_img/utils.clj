@@ -61,6 +61,9 @@
       (edn/read-string)))
 
 
+;;--------------------------------------------------------------
+;; For config files provided as EDN files in the resource directory
+;;--------------------------------------------------------------
 (defn edn-from-resource-path
   "Read an edn resource file of given name from path. This could be
   the resources/ directory or the root directory of the project."
@@ -90,6 +93,21 @@
   ([]
    (edn-from-home "config.edn")))
 
+;;--------------------------------------------------------------
+;; For config files provided as EDN files in memory java.io.File
+;;--------------------------------------------------------------
+(defn edn-from-file
+  "Read an edn resource file of given name from path. This could be
+  the resources/ directory or the root directory of the project."
+  [file]
+  (try
+    (-> file
+        (slurp)
+        (edn/read-string))
+    (catch Exception e
+      (println "::-> edn-from-file - erorr reading edn from -[" file "]-")
+      (println e)
+      nil)))
 
 ;;--------------------------------------------------------------
 ;; For config files provided as EDN files in user home

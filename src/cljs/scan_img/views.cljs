@@ -193,7 +193,7 @@
                 :id "upload-type-command"
                 :name "upload-type"
                 :value "commands"
-                :on-click #(swap! selected-upload-type assoc :upload-type "commands")}] "Command file"]]]
+                :on-click #(swap! selected-upload-type assoc :upload-type "command")}] "Command file"]]]
     [:hr]  
     [:div {:class "form-group"}
      [:button {:type "reset"

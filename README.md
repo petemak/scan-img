@@ -1,14 +1,31 @@
 # scan-img
 
-A web application based on ClojureScript and Clojuer designed to well, that part is up to you.
+A web application based on ClojureScript and Clojure for execution of remote commands
 
-- ClojureSctript for JavaScript UI,
+- ClojureScript for JavaScript UI,
 - Clojure for backend
 - [re-frame](https://github.com/Day8/re-frame)
 - Reagent for reactive functionality
 - Ring for HTTP abstraction
-- Compjure for routing
+- Compojure for routing
 - core.async for CSP in he file handling service
+
+## Configuration
+
+Requires a config.edn. Commands can eb executed on the uploaded file
+whose canonical path is specifeed by the placeholder
+
+```clojure
+{:name "xyz"
+ :port 3000
+ :mode :dev
+ :executable-cmd [["ls" "-al" "{{cannonical-path}}"]
+                  ["java" "-version"]
+                  ["lein" "version"]
+                  ["uname" "-a"]]}
+```
+
+If the file is uploaded as a command file then the commands will be executed.
 
 
 ## Development Mode
@@ -31,13 +48,12 @@ lein clean
 lein with-profile prod uberjar
 ```
 
-That should compile the clojurescript code first, and then create the standalone jar.
+That should compile the ClojureScript code first, and then create the standalone jar.
 
 When you run the jar you can set the port the ring server will use by setting the environment variable PORT.
 If it's not set, it will run on port 3000 by default.
 
-
-To compile clojurescript to javascript:
+To compile ClojureScript to JavaScript:
 
 ```
 lein clean

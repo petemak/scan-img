@@ -23,7 +23,7 @@
 ;; Process an upload for scanning
 ;; side effects
 ;;--------------------------------------------------------------
-(defn process-scan-upload
+(defn process-upload
   "Handler processes file uploads
    First saves and then posts uploaded event on processing quest"
   [params]
@@ -31,12 +31,13 @@
         file-data (:tempfile file)
         file-name (:filename file)
         file-size (:size file)
+        file-type (get params "upload-type")
         resp-data (dissoc file :tempfile)]
-    (timbre/info "::--> process-scan-upload - params: " params)
-    (timbre/info "::--> process-scan-upload - :upload-type : " (:upload-type params))
+    (timbre/info "::--> process-upload - params: " params)
+    (timbre/info "::--> process-upload - :upload-type : " file-type)
     
-    (let [results (fp/reg-upload-event file-data file-name)]
-      (timbre/info "::--> process-scan-upload - reuslts from file service: " results)
+    (let [results (fp/reg-upload-event file-data file-name file-type)]
+      (timbre/info "::--> process-upload - reuslts from file service: " results)
       (-> resp-data
           (assoc :message (str  "File [" file-name "] saved"))
           (assoc :cmd-results results)
@@ -74,7 +75,7 @@
 ;;       :params combines both :query-params and :form-params
 ;;--------------------------------------------------------------
 (defroutes upload-routes
-  (-> (POST "/upload/scan" {params :params} (process-scan-upload params))))
+  (-> (POST "/upload/scan" {params :params} (process-upload params))))
 
 (def wrapped-upload-routes
   (-> upload-routes

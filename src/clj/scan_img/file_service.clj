@@ -44,6 +44,31 @@
   (let [pf (partial utils/replace-placeholder-from-map data)]
     (map pf commands)))
 
+
+
+
+;;--------------------------------------------------------------
+;; Which commands to execute?
+;; a) Commands to process uploaded file -> commands in config.edn
+;; b) Commands from uploaded command file -> commands.edn
+;;--------------------------------------------------------------
+(defn resolve-command-config!
+  "Resolves the commands to execute from the file data:
+  :file-data - actual file data
+  :file-name - name of file
+  :file-type - type of file
+  :cannonical-path - cannonical path of file "
+  [data]
+  (let [type (:file-type data)]
+    (cond
+      (= type "image")  (utils/read-config)        
+      (= type "command") (utils/edn-from-file (:file-data data))
+      :else nil)))
+
+
+
+
+
 ;;--------------------------------------------------------------
 ;; Run commands. 
 ;; side effects!!!
@@ -57,8 +82,10 @@
    :executable-cmd [[\"command-1\" \"params-1\"]
                     [\"command-2\" \"params-2\"]]}"
   [data]
-  (if-let [config (utils/read-config)]
-    
+  (timbre/info "::-> run-commands! - input data - :file-name " (:file-name data))
+  (timbre/info "::-> run-commands! - input data - :file-type " (:file-type data))
+  (timbre/info "::-> run-commands! - input data - :file-data " (:file-data data))
+  (if-let [config (resolve-command-config! data)]
     (let [commands (process-command-params (:executable-cmd config) data)]
       (loop [cmds commands
              accum nil]
@@ -69,15 +96,19 @@
                   result @(exec/sh cmd {:shutdown true})]
               (timbre/info "::==> rund-command! with config found: " config)
               (timbre/info "::==> run-command! executed --[" cmd "]-- result: " result)
-
-               (recur (rest cmds) (utils/execresult->strlist result accum)))))))
+              (recur (rest cmds) (utils/execresult->strlist result accum)))))))
     (do
-      (timbre/info "::==> command execution failed. config.edn not dound!")      
+      (timbre/info "::-> run-commands! - Command execution failed. Commands not found!")
       (utils/execresult->strlist {:exit nil
                                   :out nil
-                                  :err (str  "Command execution failed!\n"
-                                       "Make sure \nconfig.edn\n is in the expected path")
-                                  :exception nil}))))
+                                  :err (str  "Command execution for failed!\n"
+                                             "File name: " (:file-name data) "\n"
+                                             "File type: " (:file-type data) "\n"
+                                             "Commands: " (:file-type data) "\n"
+                                             "Or if its a command file make sure 
+                                              commands are specified.")
+                                  :exception nil}
+                                 nil))))
 
 
 ;;--------------------------------------------------------------
@@ -133,9 +164,10 @@
 ;;--------------------------------------------------------------
 (defn reg-upload-event
   "Register an event on the fileupload channel to signal that
-  a file was uploaded. The consumer on the channel will take
+  a file was uploaded. Argumets are the file source, file name and type.
+  The consumer on the channel will take
   approprient action"
-  [file-src file-name]
+  [file-src file-name file-type]
   (if (async/>!! (channel :input-chan)
-                  {:file-data file-src :file-name file-name})
+                 {:file-data file-src :file-name file-name :file-type file-type})
     (async/<!! (channel :output-chan))))
