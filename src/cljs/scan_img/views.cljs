@@ -2,6 +2,7 @@
   (:require [cljs.reader :as cr]
             [re-frame.core :as rf]
             [scan-img.subs :as subs]
+            [scan-img.text-input :as txt]
             [ajax.core :refer [POST]]))
 
 
@@ -146,6 +147,7 @@
       (swap! tick-status assoc :tick true))))
 
 
+
 (defn reset-form
   []
   (rf/dispatch [:reset-form]))
@@ -219,7 +221,8 @@
    [:br]
    [:div.container.conatiner_fluid
     [:div.row
-     [:div.col [upload-form]]]      
+     #_[:div.col [upload-form]]
+       [:div.col [txt/text-field]]]      
     [:hr]
     [:div.row
      [:div.col [status-indicator]]]]])
