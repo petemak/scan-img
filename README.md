@@ -12,8 +12,7 @@ A web application based on ClojureScript and Clojure for execution of remote com
 
 ## Configuration
 
-Requires a config.edn. Commands can eb executed on the uploaded file
-whose canonical path is specifeed by the placeholder
+Requires a config.edn with commands to execute. Otherwise commands can be defined in a file in EDN format and uploaded. The place-holder {{canonical-path}} is is replaced by the path where the file is stored. That allows to perform actions on an uploaded file. E.g. import it into Docker.
 
 ```clojure
 {:name "xyz"
