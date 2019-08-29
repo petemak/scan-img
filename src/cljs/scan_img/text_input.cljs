@@ -10,14 +10,13 @@
 
 
 (defn submit-code
-  []
-  (println "::-> submit-code ............"))
-
+  [txt]
+  (println "::-> submit-code: " txt ))
 
 (defn text-field
   "Create text input area"
   []
-  (let [lst (r/atom {:text ""})]
+  (let [txt-val (r/atom {:text ""})]
     (fn [] 
       [:div
        [:form {:id "text-field" :on-submit (fn [e]
@@ -28,11 +27,8 @@
                      :name :code-txt-field
                      :class "form-control"
                      :rows 10
-                     :on-change (fn [e]
-                                  (swap! lst :text (-> e
-                                                       .-target
-                                                       .-value)))}
-          (:text-field @lst)]]        
+                     :on-change #(swap! txt-val :text (-> % .-target .-value))}
+         (:text @txt-val) ]]        
         [:hr]
         [:div {:class "form-group"}
          [:button {:type "reset"
@@ -41,4 +37,4 @@
          
          [:button {:type :submit
                    :class "btn btn-primary float-right"
-                   :on-click #(submit-code)} "Scan..."]]]])))
+                   :on-click #(submit-code @txt-val)} "Scan..."]]]])))

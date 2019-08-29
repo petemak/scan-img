@@ -74,8 +74,10 @@
 ;;-----------------------------------------------------------
 (rf/reg-event-fx
  :upload-type 
- (fn [{:keys [db]} [_ val]]
+ (fn [{:keys [db]} [_ val]] 
    {:db (assoc db :upload-type val)}))
+
+
 
 
 
