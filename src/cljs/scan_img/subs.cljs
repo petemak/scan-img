@@ -47,9 +47,40 @@
 
 
 ;;-----------------------------------------------------------
-;; Domino 4: querry effect of resetting the form
+;; Domino 4: querry effect of changing the upload type
 ;;-----------------------------------------------------------
 (rf/reg-sub
  :upload-type
  (fn [db]
    (:upload-type db)))
+
+
+;;-----------------------------------------------------------
+;; Domino 4: querry effect of of changing the code
+;;-----------------------------------------------------------
+(rf/reg-sub
+ :code-text
+ (fn [db]
+   (:code-text db)))
+
+
+
+;;-----------------------------------------------------------
+;; Domino 4: querry effect of of changing the user name
+;;-----------------------------------------------------------
+(rf/reg-sub
+ :user-name
+ (fn [db]
+   (:user-name db)))
+
+
+
+
+
+;;-----------------------------------------------------------
+;; Domino 4: querry effect of of changing the user password
+;;-----------------------------------------------------------
+(rf/reg-sub
+ :password
+ (fn [db]
+   (:password db)))

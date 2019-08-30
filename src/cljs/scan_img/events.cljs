@@ -1,7 +1,8 @@
 (ns scan-img.events
   (:require
    [re-frame.core :as rf]
-   [scan-img.db :as db]))
+   [scan-img.db :as db]
+   [day8.re-frame.http-fx]))
 
 (rf/reg-event-db
  ::initialize-db
@@ -78,6 +79,48 @@
    {:db (assoc db :upload-type val)}))
 
 
+;;-----------------------------------------------------------
+;; Domino 2: comupte effect of selecting the upload type 
+;;-----------------------------------------------------------
+(rf/reg-event-fx
+ :code-text-change 
+ (fn [{:keys [db]} [_ val]]
+   {:db (assoc db :code-text val)}))
+
+
+;-----------------------------------------------------------
+;; Domino 2: comupte effect of entering or changing the user name
+;;-----------------------------------------------------------
+(rf/reg-event-fx
+ :username-change 
+ (fn [{:keys [db]} [_ val]]
+   {:db (assoc db :user-name val)}))
+
+
+;;-----------------------------------------------------------
+;; Domino 2: comupte effect of entering or changing the
+;;-----------------------------------------------------------
+(rf/reg-event-fx
+ :password-change 
+ (fn [{:keys [db]} [_ val]]
+   {:db (assoc db :password val)}))
+
+
+
+;;-----------------------------------------------------------
+;; Domino 2: comupte effect of submitting
+;;-----------------------------------------------------------
+(rf/reg-event-fx
+ :submit-code-text 
+ (fn [{:keys [db]} [_ val]]
+   (println "::--> submit-code-txt: " val)
+   {:db (assoc db :show-progress-bar true)
+    :http-xhrio {:metho :POST
+                 :uri "/upload/code"
+                 :timeout 10000
+                 :response-format :json
+                 :on-succss [:process-success-code-response]
+                 :on-failure [:process-failed-code-response]}}))
 
 
 
