@@ -1,8 +1,9 @@
 (ns scan-img.events
   (:require
-   [re-frame.core :as rf]
    [scan-img.db :as db]
-   [day8.re-frame.http-fx]))
+   [ajax.core :as ajax]
+   [re-frame.core :as rf]
+   [day8.re-frame.http-fx])) ;; wil cause :http-xhrio to reister with re-frame
 
 (rf/reg-event-db
  ::initialize-db
@@ -108,20 +109,53 @@
 
 
 ;;-----------------------------------------------------------
-;; Domino 2: comupte effect of submitting
+;; Domino 2: comupte effect of submitting using :http-xhrio
 ;;-----------------------------------------------------------
 (rf/reg-event-fx
  :submit-code-text 
  (fn [{:keys [db]} [_ val]]
    (println "::--> submit-code-txt: " val)
    {:db (assoc db :show-progress-bar true)
-    :http-xhrio {:metho :POST
+    :http-xhrio {:method :post
                  :uri "/upload/code"
                  :timeout 10000
-                 :response-format :json
-                 :on-succss [:process-success-code-response]
-                 :on-failure [:process-failed-code-response]}}))
+                 :body val
+                 ;;:format (ajax/json-request-format)
+                 :response-format (ajax/json-request-format {:keywords? true})
+                 :on-succss [:successful-code-req]
+                 :on-failure [:failed-code-req]}}))
 
 
 
 
+
+;;-----------------------------------------------------------
+;; Domino 2: comupte effect of receiving a successful
+;; :http-xhrio for :submit-code-txt
+;;
+;;-----------------------------------------------------------
+(rf/reg-event-fx
+ :successful-code-req
+ (fn [{:keys [db]} [_ result]]
+   (println "::-->  :successful-code-req: " result)
+
+   (let [m  (-> db
+                (assoc :show-progress-bar false)
+                (assoc :code-text-results result))] 
+     {:db m})))
+
+
+
+;;-----------------------------------------------------------
+;; Domino 2: comupte effect of receiving a failed
+;; :http-xhrio for :submit-code-txt
+;;
+;;-----------------------------------------------------------
+(rf/reg-event-fx
+ :failed-code-req
+ (fn [{:keys [db]} [_ result]]
+   (println "::-->  :failed-code-req: " result)   
+   (let [m  (-> db
+                (assoc :show-progress-bar false)
+                (assoc :code-text-error result))] 
+     {:db m})))

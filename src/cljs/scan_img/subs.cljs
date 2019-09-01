@@ -84,3 +84,34 @@
  :password
  (fn [db]
    (:password db)))
+
+
+
+
+
+;;-----------------------------------------------------------
+;; Domino 4: querry effect of submitting code
+;;-----------------------------------------------------------
+(ref/reg-sub
+ :submit-code-text
+ (fn [db]
+   (:show-progress-bar db)))
+
+
+;;-----------------------------------------------------------
+;; Domino 4: querry effect of a successful submitting code
+;;-----------------------------------------------------------
+(ref/reg-sub
+ :successful-code-req
+ (fn [db]
+   (:code-text-results db)))
+
+
+
+;;-----------------------------------------------------------
+;; Domino 4: querry effect of a failed submitting code
+;;-----------------------------------------------------------
+(ref/reg-sub
+ :failed-code-req
+ (fn [db]
+   (:code-text-error db)))

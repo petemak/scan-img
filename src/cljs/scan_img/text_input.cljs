@@ -1,8 +1,8 @@
-(ns scan-img.text-input
+load-them(ns scan-img.text-input
   (:require [cljs.reader :as cr]
             [reagent.core :as r]
             [re-frame.core :as rf]
-            [day8.re-frame.http-fx] 
+            ;; [day8.re-frame.http-fx] ;; will cause :http-xhrio to register with re-frame
             [scan-img.subs :as subs]))
 
 
