@@ -2,7 +2,9 @@
   (:require
    [scan-img.db :as db]
    [ajax.core :as ajax]
+   [ajax.edn :as ajxedn]
    [re-frame.core :as rf]
+   [scan-img.utils :as utils]
    [day8.re-frame.http-fx])) ;; wil cause :http-xhrio to reister with re-frame
 
 (rf/reg-event-db
@@ -110,6 +112,7 @@
 
 ;;-----------------------------------------------------------
 ;; Domino 2: comupte effect of submitting using :http-xhrio
+;; you MUST provide a :response-format, it is not inferred for you.
 ;;-----------------------------------------------------------
 (rf/reg-event-fx
  :submit-code-text 
@@ -120,18 +123,17 @@
                  :uri "/upload/code"
                  :timeout 10000
                  :body val
-                 ;;:format (ajax/json-request-format)
-                 :response-format (ajax/json-request-format {:keywords? true})
-                 :on-succss [:successful-code-req]
+                 ;;:format (ajxedn/edn-request-format)
+                 :response-format (ajxedn/edn-response-format)
+                 :on-success [:successful-code-req]
                  :on-failure [:failed-code-req]}}))
-
 
 
 
 
 ;;-----------------------------------------------------------
 ;; Domino 2: comupte effect of receiving a successful
-;; :http-xhrio for :submit-code-txt
+;; :http-xhrio for :successful-code-req
 ;;
 ;;-----------------------------------------------------------
 (rf/reg-event-fx
@@ -141,21 +143,31 @@
 
    (let [m  (-> db
                 (assoc :show-progress-bar false)
-                (assoc :code-text-results result))] 
+                (assoc :code-text-results result))
+         msg (utils/status (str "Submit succeeded. Results: -> " result " <-")
+                           [] nil)]
+     (rf/dispatch [:upload-status msg])     
      {:db m})))
 
 
 
 ;;-----------------------------------------------------------
 ;; Domino 2: comupte effect of receiving a failed
-;; :http-xhrio for :submit-code-txt
+;; :http-xhrio for :failed-code-req
 ;;
 ;;-----------------------------------------------------------
 (rf/reg-event-fx
  :failed-code-req
  (fn [{:keys [db]} [_ result]]
-   (println "::-->  :failed-code-req: " result)   
+   (println "::-->  :failed-code-req: " result)
+   
    (let [m  (-> db
                 (assoc :show-progress-bar false)
-                (assoc :code-text-error result))] 
+                (assoc :code-text-error result))
+         msg (utils/status (str "Submit failed with error message -> " (:last-error result) " <-")
+                           [(str "Status: " (:status result))
+                            (str "Status text: " (:status-text result))
+                            (str "Debug message: " (:debug-message result))] nil)]
+
+     (rf/dispatch [:upload-status msg])
      {:db m})))

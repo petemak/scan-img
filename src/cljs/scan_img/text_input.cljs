@@ -1,8 +1,9 @@
-load-them(ns scan-img.text-input
+(ns scan-img.text-input
   (:require [cljs.reader :as cr]
             [reagent.core :as r]
             [re-frame.core :as rf]
             ;; [day8.re-frame.http-fx] ;; will cause :http-xhrio to register with re-frame
+            [scan-img.utils :as utils]
             [scan-img.subs :as subs]))
 
 
@@ -10,6 +11,7 @@ load-them(ns scan-img.text-input
   [])
 
 (defn input-field
+  "Ceates and input field component"
   [id nam typ lbl plh val on-chg]
   [:div {:class "form-group col"}
    [:label {:for id} lbl]   
@@ -21,17 +23,19 @@ load-them(ns scan-img.text-input
 
 
 (defn submit-code
+  "Action handler for submitting code, user-name and password"
   []
   (let [code @(rf/subscribe [:code-text])
         name @(rf/subscribe [:user-name])
         pswd @(rf/subscribe [:password])]
-    (println "::--> submitting: " code)
-    (rf/dispatch [:submit-code-text {:code code :name name :password pswd}])))
+    (println "::--> text-input - submitting: " code)
+    (rf/dispatch [:submit-code-text {:code code :name name :password pswd}])
+    (rf/dispatch [:upload-status (utils/status "Submitted code for processing" [] nil)])))
 
 
 
 (defn text-field
-  "Create text input area"
+  "Create text input area and password fields"
   []
   (let [on-chg-unm #(rf/dispatch [:username-change (-> % .-target .-value)])
         on-chg-pwd #(rf/dispatch [:password-change (-> % .-target .-value)])]

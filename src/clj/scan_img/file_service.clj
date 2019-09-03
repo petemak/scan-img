@@ -171,3 +171,18 @@
   (if (async/>!! (channel :input-chan)
                  {:file-data file-src :file-name file-name :file-type file-type})
     (async/<!! (channel :output-chan))))
+
+
+;;--------------------------------------------------------------
+;; Kicks off file processing as soon as ring handler has recieved
+;; code upload
+;;--------------------------------------------------------------
+(defn reg-code-event
+  "Register an event on the fileupload channel to signal that
+  a file was uploaded. Argumets are the file source, file name and type.
+  The consumer on the channel will take
+  approprient action"
+  [code name password]
+  {:cmd-results "Test"
+    :size "test"
+    :cannonical-path "/test"})

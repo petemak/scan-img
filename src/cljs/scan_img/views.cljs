@@ -2,6 +2,7 @@
   (:require [cljs.reader :as cr]
             [re-frame.core :as rf]
             [scan-img.subs :as subs]
+            [scan-img.utils :as utils]
             [scan-img.text-input :as txt]
             [ajax.core :refer [POST]]))
 
@@ -23,16 +24,6 @@
 ;; call the ticker dispatching function every half a second
 (defonce ticker (js/setInterval dispatch-tick 400))
 
- 
-;;-----------------------------------------------------------
-;; Upload status indicator
-;;-----------------------------------------------------------
-(defn status [title
-              upl-messages
-              cmd-messages]
-  {:title title
-   :upl-messages upl-messages
-   :cmd-messages cmd-messages})
 
 
 ;;-----------------------------------------------------------
@@ -99,7 +90,7 @@
   (let [rsp (cr/read-string resp)
         upl-messages (upload-messages rsp)
         cmd-messages (:cmd-results rsp)   
-        sts (status "Upload succeeded"
+        sts (utils/status "Upload succeeded"
                     upl-messages
                     cmd-messages)]
     (println "::==> handle-reponse-ok: upload nessage " upl-messages)
@@ -111,11 +102,11 @@
   "Handle a failed uplod"
   [ctx]
   (let [rsp (js->clj (:response ctx) :keywordize-keys true)
-        sts (status "Upload failed!"
-                    [(str "HTTP status code: "  (:status ctx))
-                     (str "HTTP tatus message: " (:status-text ctx))
-                     (str "Failure type: " (:failure ctx))
-                     (str "Response message: " (:message rsp))]
+        sts (utils/status "Upload failed!"
+                          [(str "HTTP status code: "  (:status ctx))
+                           (str "HTTP tatus message: " (:status-text ctx))
+                           (str "Failure type: " (:failure ctx))
+                           (str "Response message: " (:message rsp))]
                     nil)]
     (println "::-> handle-reponse-error: rsp " rsp)
     (rf/dispatch [:upload-status sts] )))
@@ -135,7 +126,7 @@
                     (.append file-name file-data)
                     (.append "upload-type" (:upload-type file-type)))
         
-        sts (status (str  "Uploading file '" file-name "' with type '" @selected-upload-type "'") [] nil)]
+        sts (utils/status (str  "Uploading file '" file-name "' with type '" @selected-upload-type "'") [] nil)]
     (when (some? file-data)
       (POST "/upload/scan" {:body form-data
                             ;; :response-format :json
