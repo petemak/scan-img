@@ -61,10 +61,10 @@
   [data]
   (let [type (:file-type data)]
     (cond
-      (= type "image")  (utils/read-config)        
+      (= type "image") (utils/read-config)
+      (= type "docker-file") (utils/read-config)              
       (= type "command") (utils/edn-from-file (:file-data data))
       :else nil)))
-
 
 
 
@@ -159,8 +159,18 @@
 
 
 ;;--------------------------------------------------------------
+;; Queue events defined by descriptor
+;;--------------------------------------------------------------
+(defn queue-event
+  "Que event for processing"
+  [evt-descr]
+  (if (async/>!! (channel :input-chan) evt-descr)
+    (async/<!! (channel :output-chan))))
+
+
+;;--------------------------------------------------------------
 ;; Kicks off file processing as soon as ring handler has recieved
-;; upload
+;; an image upload
 ;;--------------------------------------------------------------
 (defn reg-upload-event
   "Register an event on the fileupload channel to signal that
@@ -168,9 +178,8 @@
   The consumer on the channel will take
   approprient action"
   [file-src file-name file-type]
-  (if (async/>!! (channel :input-chan)
-                 {:file-data file-src :file-name file-name :file-type file-type})
-    (async/<!! (channel :output-chan))))
+  (let [descr {:file-data file-src :file-name file-name :file-type file-type}]
+    (queue-event descr)))
 
 
 ;;--------------------------------------------------------------
@@ -182,7 +191,10 @@
   a file was uploaded. Argumets are the file source, file name and type.
   The consumer on the channel will take
   approprient action"
-  [code name password]
-  {:cmd-results "Test"
-    :size "test"
-    :cannonical-path "/test"})
+  [code user-name password]
+  (let [descr {:file-data code
+               :file-name "docker-file"
+               :file-type "docker-file"
+               :user-name user-name
+               :user-password password}]
+    (queue-event descr)))

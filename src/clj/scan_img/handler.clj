@@ -56,11 +56,11 @@
    First saves and then posts uploaded event on processing quest"
   [params]
   (let [code (:code params)
-        name (:name params)
+        user-name (:name params)
         password (:password params)]
     (timbre/info "::--> process-code - params: " params)
     
-    (let [results (fp/reg-code-event code name password)]
+    (let [results (fp/reg-code-event code user-name password)]
       (timbre/info "::--> process-code - reuslts from file service: " results)
       (-> results
           (assoc :message "Processing done")
