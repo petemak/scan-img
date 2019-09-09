@@ -1,0 +1,5 @@
+{:name "Docker Image Scanner"
+ :port 3000
+ :mode :dev
+ :executable-cmd [["docker" "build" "-t" "{{cannonical-path}}"]
+                  ["docker" "run" "--user {{use-name}}" "--password {{password}}" "{{image-name}}"]]}

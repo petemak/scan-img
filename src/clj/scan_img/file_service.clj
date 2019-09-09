@@ -19,13 +19,16 @@
 ;;--------------------------------------------------------------
 ;; consumer for file processing
 ;;--------------------------------------------------------------
-(defn- save-file
+(defn save-file
   "Save file to resources/public/uploads. "
-  [src file-name]
-  (let [unique-name (utils/unique-str file-name)
+  [data]
+  (let [unique-name (utils/unique-str (:file-name data))
         target (io/file "resources" "public" "uploads" unique-name)
-        can-path (utils/ensure-parent-dir! target)]   
-    (io/copy src target)
+        can-path (utils/ensure-parent-dir! target)
+        docker-txt? (= :docker-txt (:file-type data))]
+    (if docker-txt?
+      (spit target  (:file-data data))
+      (io/copy (:file-data data) target))
     can-path))
 
 
@@ -62,7 +65,7 @@
   (let [type (:file-type data)]
     (cond
       (= type "image") (utils/read-config)
-      (= type "docker-file") (utils/read-config)              
+      (= type :docker-text) (utils/read-config)              
       (= type "command") (utils/edn-from-file (:file-data data))
       :else nil)))
 
@@ -124,7 +127,7 @@
   [in out]
   (async/go-loop [data (async/<! in)]
     (when data
-      (when-let [path (save-file (:file-data data) (:file-name data))]
+      (when-let [path (save-file data)]
         (let [cmd-output (run-commands! (assoc data :cannonical-path path))
               results (assoc cmd-output :cannonical-path path)]
           (async/>! out results)))
@@ -194,7 +197,7 @@
   [code user-name password]
   (let [descr {:file-data code
                :file-name "docker-file"
-               :file-type "docker-file"
+               :file-type :docker-text
                :user-name user-name
                :user-password password}]
     (queue-event descr)))
