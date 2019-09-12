@@ -22,10 +22,11 @@
 (defn save-file
   "Save file to resources/public/uploads. "
   [data]
+  (timbre/info "::--> save-file: input data " data)
   (let [unique-name (utils/unique-str (:file-name data))
         target (io/file "resources" "public" "uploads" unique-name)
         can-path (utils/ensure-parent-dir! target)
-        docker-txt? (= :docker-txt (:file-type data))]
+        docker-txt? (= :docker-text (:file-type data))]
     (if docker-txt?
       (spit target  (:file-data data))
       (io/copy (:file-data data) target))
