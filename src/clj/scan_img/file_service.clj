@@ -49,7 +49,7 @@
     (map pf commands)))
 
 
-
+ 
 
 ;;--------------------------------------------------------------
 ;; Which commands to execute?
@@ -92,7 +92,7 @@
   (if-let [config (resolve-command-config! data)]
     (let [commands (process-command-params (:executable-cmd config) data)]
       (loop [cmds commands
-             accum nil]
+             accum {:results []}] ;; fix this: how to ensure results are in a vector and not a list??
         (if (empty? cmds)
           accum
           (do
@@ -100,7 +100,7 @@
                   result @(exec/sh cmd {:shutdown true})]
               (timbre/info "::==> rund-command! with config found: " config)
               (timbre/info "::==> run-command! executed --[" cmd "]-- result: " result)
-              (recur (rest cmds) (utils/execresult->strlist result accum)))))))
+              (recur (rest cmds) (utils/execresult->strlist cmd  result accum)))))))
     (do
       (timbre/info "::-> run-commands! - Command execution failed. Commands not found!")
       (utils/execresult->strlist {:exit nil
@@ -127,6 +127,7 @@
   returns a map of input and output channels"
   [in out]
   (async/go-loop [data (async/<! in)]
+    (timbre/info "::-> start-processor - data from queue: " data)
     (when data
       (when-let [path (save-file data)]
         (let [cmd-output (run-commands! (assoc data :cannonical-path path))

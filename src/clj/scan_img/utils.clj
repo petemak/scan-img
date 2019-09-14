@@ -179,10 +179,13 @@
      :out \"\"
      :err
      :exception nil}}"
-  [result accum]
-  (-> accum
-      (assoc :message "Command executed")
-      (concat-vals :outstrlst (str/split (:out result) #"\n"))))
+  [cmd result accum]
+  (let [result (-> {}
+                   (assoc :command cmd)
+                   (assoc :message "Command executed successfuly")
+                   (assoc :outstrlst (str/split (:out result) #"\n")))]
+    (update accum :results conj result)))
+
 
 ;;--------------------------------------------------------------
 ;; Utility functions for extracting results from
@@ -192,25 +195,29 @@
   "Create an , given an err result string like
     {:exit -35545
      :err  \"Execution results..\"}}"
-  [result accum]
-  (-> accum
-      (assoc :message "Commands succesfuly executed...")
-      (concat-vals :outstrlst (str/split (:err result) #"\n"))))
+  [cmd result accum]
+  (let [result (-> {}
+                   (assoc :command cmd)
+                   (assoc :message "Command executed with an error...")
+                   (assoc :outstrlst (str/split (:err result) #"\n")))]
+    (update accum :results conj result)))
 
 
 ;;--------------------------------------------------------------
 ;; Utility functions for extracting results from
-;; a command execution
+;; a command execution and adding them to the accumlator
 ;;--------------------------------------------------------------
 (defn exc-map
   "Create an execption result, given a map with an execption object like
     {:exit -35545
      :exception #error {:cause \"error=2, No such file or directory\"
                         :via []  .... }}"
-  [result accum]
-  (-> accum
-      (assoc :message (:err result))
-      (concat-vals :outstrlst (exception->strlst (:exception result)))))
+  [cmd result accum]
+  (let [result (-> {}
+                   (assoc :command cmd)
+                   (assoc :message "Command failed with an exception...")
+                   (assoc :outstrlst (exception->strlst (:exception result))))]
+    (update accum :results conj result)))
 
 
 
@@ -221,7 +228,7 @@
 ;; a command execution
 ;;--------------------------------------------------------------
 (defn execresult->strlist
-  "Converts clj-commons-exec results to a list of strings
+  "Converts results of the command cmd to a list os strings.
   The expcted result map looks as follows in case an
   exception happened:
   
@@ -229,12 +236,13 @@
    :out nil,
    :err \"ls: illegal option...\",
    :exception #error {...}}"
-  [result accum]
-  (timbre/info "::->  execresult->strlist: " result)
+  [cmd result accum]
+  (timbre/info "::->  execresult->strlist - for commnd: " cmd)
+  (timbre/info "::->  execresult->strlist - results for commnd: " result)
   (cond
     (nil? result) (assoc accum :outstrlst ["Unknown executaion error!"
                                         "Examine server logs e.g. figwheel_server.log"])
-    (some? (:out result)) (out-map result accum)
-    (some? (:err result)) (err-map result accum)
-    (some? (:exception result)) (exc-map result accum)))
+    (some? (:out result)) (out-map cmd result accum)
+    (some? (:err result)) (err-map cmd result accum)
+    (some? (:exception result)) (exc-map cmd result accum)))
 
