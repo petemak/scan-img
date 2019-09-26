@@ -8,55 +8,69 @@
 
 
 (defn reset-form
-  [])
+  []
+  (rf/dispatch [:reset-form]))
 
+
+;;--------------------------------------------------------------
+;; Action handler invoked when  submitt button is pressed to
+;;--------------------------------------------------------------
+(defn submit-clicked
+  "Action handler for submitting code, user-name and password"
+  []
+  (println "::--> text-input - submitting: ....")
+    ;; (swap! tick-status assoc :tick true)
+  (rf/dispatch [:submit-clicked]))
+
+
+
+;;--------------------------------------------------------------
+;; creates an input field based on information provided for name
+;; type, etc
+;;--------------------------------------------------------------
 (defn input-field
   "Ceates and input field component"
-  [id nam typ lbl plh val on-chg]
+  [id nam typ lbl val on-chg req]
   [:div {:class "form-group col"}
    [:label {:for id} lbl]   
    [:input {:id id
             :type typ
             :class "form-control"
-            :placeholder plh
-            :on-change on-chg}]])
-
-
-(defn submit-code
-  "Action handler for submitting code, user-name and password"
-  []
-  (let [code @(rf/subscribe [:code-text])
-        name @(rf/subscribe [:user-name])
-        pswd @(rf/subscribe [:password])]
-    (println "::--> text-input - submitting: " code)
-    (rf/dispatch [:submit-code-text {:code code :name name :password pswd}])
-    (rf/dispatch [:upload-status (utils/status "Submitted code for processing" [] nil)])))
+            :value @val
+            :on-change on-chg
+            :required req}]])
 
 
 
+;;--------------------------------------------------------------
+;; Main text file and user-name pasword filed component. 
+;; 
+;;--------------------------------------------------------------
 (defn text-field
   "Create text input area and password fields"
   []
-  (let [on-chg-unm #(rf/dispatch [:username-change (-> % .-target .-value)])
-        on-chg-pwd #(rf/dispatch [:password-change (-> % .-target .-value)])]
+  (let [val-unm  (rf/subscribe [:user-name])
+        val-pwd  (rf/subscribe [:password])
+        on-chg-unm #(rf/dispatch [:modify-name (-> % .-target .-value)])
+        on-chg-pwd #(rf/dispatch [:modify-password (-> % .-target .-value)])]
     (fn [] 
       [:div
-       [:form {:id "text-field" :on-submit (fn [e]
-                                             (.preventDefault e))}
+       [:form {:id "text-field" :class "was-validated" :on-submit (fn [e]
+                                                                    (.preventDefault e))}
         [:div {:class "form-group"}
          [:label {:for :code-txt-field} "Paste Docker file"]
          [:textarea {:id :code-txt-field
                      :name :code-txt-field
                      :class "form-control"
                      :rows 10
-                     :on-change #(rf/dispatch [:code-text-change (-> % .-target .-value)])
-                     ;; :value (rf/subscribe [:code-txt])
-                     
-                     } ]]
-
+                     :value @(rf/subscribe [:code-text])
+                     :on-change #(rf/dispatch [:modify-code (-> % .-target .-value)])
+                     :required "true"}]
+         
+         [:div {:class "invalid-feedback"} "Ensure you enter valid Docker code that generates ephemeral containers"]]
         [:div {:class "row"}
-         [input-field :user-name :user-name nil         "User Name" "User id"  "user name ..." on-chg-unm]
-         [input-field :password  :password  "password"  "Password"  "Password"  nil            on-chg-pwd]]
+         [input-field :user-name :user-name nil         "User Name" val-unm on-chg-unm true]
+         [input-field :password  :password  "password"  "Password"  val-pwd on-chg-pwd true]]
         
         [:hr]
         [:div {:class "form-group"}
@@ -66,4 +80,5 @@
          
          [:button {:type :submit
                    :class "btn btn-primary float-right"
-                   :on-click #(submit-code)} "Scan..."]]]])))
+                   :disabled @(rf/subscribe [:submit-disabled?])
+                   :on-click #(submit-clicked)} "Scan..."]]]])))

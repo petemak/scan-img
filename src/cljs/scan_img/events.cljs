@@ -1,25 +1,26 @@
 (ns scan-img.events
   (:require
+   [clojure.string :as str]
    [scan-img.db :as db]
+   [scan-img.ui-stm :as ui-stm]
    [ajax.core :as ajax]
    [ajax.edn :as ajxedn]
    [re-frame.core :as rf]
    [scan-img.utils :as utils]
+   [scan-img.ui-stm :as ui-stm]
    [day8.re-frame.http-fx])) ;; wil cause :http-xhrio to reister with re-frame
 
+
+;;-----------------------------------------------------------
+;; Initialises app-db. Event send from core.cljs
+;;-----------------------------------------------------------
 (rf/reg-event-db
  ::initialize-db
- (fn [_ _]
-   db/default-db))
+ (fn [db _]
+   (-> db
+       (merge db/default-db)
+       (assoc :state (ui-stm/next-state nil :init)))))
 
-
-;;-----------------------------------------------------------
-;; Domino 2: comupte effect of name change event
-;;-----------------------------------------------------------
-(rf/reg-event-fx
- :name-change
- (fn [{:keys [db]} [_ new-name]]
-   {:db (assoc db :name new-name)}))
 
 
 ;;-----------------------------------------------------------
@@ -48,8 +49,9 @@
  :progress-tick
  (fn [{:keys [db]} [_ _]]
    (let [tick (:progress-tick db)
-         new-tick (if (< tick 100) (+ tick 5) 0)] 
-     {:db (assoc db :progress-tick new-tick)})))
+         ntick (if (< tick 100) (+ tick 5) 0)
+         new-tick  (if (not= :SUBMITTING-DATA (:state db)) 100 ntick)]
+     {:db (assoc db :progress-tick ntick)})))
 
 
 
@@ -82,31 +84,116 @@
    {:db (assoc db :upload-type val)}))
 
 
+
 ;;-----------------------------------------------------------
-;; Domino 2: comupte effect of selecting the upload type 
+;; Update current state using state machine
+;;-----------------------------------------------------------
+(defn transition-state
+  "Based on the currrent state and event in the app-db transition
+  next state"
+  [db event]
+  (println "::--> Transition sate from " (:state db) " with event " event)
+  (if-let [nxt-state (ui-stm/next-state (:state db) event)] 
+    (assoc db :state nxt-state)
+    db))
+
+
+
+
+;;-----------------------------------------------------------
+;; Domino 2: comupte effect of changing the code text 
 ;;-----------------------------------------------------------
 (rf/reg-event-fx
- :code-text-change 
- (fn [{:keys [db]} [_ val]]
-   {:db (assoc db :code-text val)}))
+ :modify-code 
+ (fn [{:keys [db]} [evt val]]
+   {:db (-> db
+            (assoc :code-text val)
+            (transition-state evt))}))
 
 
 ;-----------------------------------------------------------
 ;; Domino 2: comupte effect of entering or changing the user name
 ;;-----------------------------------------------------------
 (rf/reg-event-fx
- :username-change 
- (fn [{:keys [db]} [_ val]]
-   {:db (assoc db :user-name val)}))
+ :modify-name 
+ (fn [{:keys [db]} [evt val]]
+   {:db (-> db
+            (assoc :user-name val)
+            (transition-state evt))}))
 
 
 ;;-----------------------------------------------------------
 ;; Domino 2: comupte effect of entering or changing the
 ;;-----------------------------------------------------------
 (rf/reg-event-fx
- :password-change 
+ :modify-password 
+ (fn [{:keys [db]} [evt val]]
+   {:db (-> db
+            (assoc :password val)
+            (transition-state evt))}))
+
+
+
+;;-----------------------------------------------------------
+;; Domino 2: comupte status if required fields
+;;-----------------------------------------------------------
+(rf/reg-event-fx
+ :required-fields-filled
  (fn [{:keys [db]} [_ val]]
-   {:db (assoc db :password val)}))
+   (let [c (:code-text db)
+         u (:user-name db)
+         p (:password db)
+         ]
+     {:db  (assoc db :required-fields-filled (and c u p))})))
+
+
+;;-----------------------------------------------------------
+;; Domino 2: comupte status of clicking submit
+;; Checks and dispatches checks an event depending on information
+;; 
+;;-----------------------------------------------------------
+(rf/reg-event-fx
+ :submit-clicked
+ (fn [{:keys [db]} [_ _]]
+   (let [{:keys [code-text user-name password]} db
+         evt (cond (str/blank? code-text)
+                   [:submit-no-code]
+                   (str/blank? user-name)
+                   [:submit-no-name]
+                   (str/blank? password)
+                   [:submit-no-password]
+                   :else
+                   [:try-submit])]
+     {:db db
+      :dispatch evt})))
+
+
+
+;;-----------------------------------------------------------
+;; Domino 2: regsiter event handler for submitting with no code
+;;-----------------------------------------------------------
+(rf/reg-event-db
+ :submit-no-code
+ (fn [db [event _]]
+   (transition-state db event)))
+
+;;-----------------------------------------------------------
+;; Domino 2: regsiter event handler for submitting with no user name
+;;-----------------------------------------------------------
+(rf/reg-event-db
+ :submit-no-name
+ (fn [db [event _]]
+   (transition-state db event)))
+
+
+;;-----------------------------------------------------------
+;; Domino 2: regsiter event handler for submitting with no password
+;;-----------------------------------------------------------
+(rf/reg-event-db
+ :submit-no-password
+ (fn [db [event _]]
+   (transition-state db event)))
+
 
 
 
@@ -115,18 +202,20 @@
 ;; you MUST provide a :response-format, it is not inferred for you.
 ;;-----------------------------------------------------------
 (rf/reg-event-fx
- :submit-code-text 
- (fn [{:keys [db]} [_ val]]
-   (println "::--> submit-code-txt: " val)
-   {:db (assoc db :show-progress-bar true)
-    :http-xhrio {:method :post
-                 :uri "/upload/code"
-                 :timeout 10000
-                 :body val
-                 ;;:format (ajxedn/edn-request-format)
-                 :response-format (ajxedn/edn-response-format)
-                 :on-success [:successful-code-req]
-                 :on-failure [:failed-code-req]}}))
+ :try-submit 
+ (fn [{:keys [db]} [event _]]
+   (println "::--> try-submit: " db)
+   (let [{:keys [code-text user-name password]} db
+         payload {:code code-text :name user-name :password password}] 
+     {:db (transition-state db event)
+      :http-xhrio {:method :post
+                   :uri "/upload/code"
+                   :timeout 10000
+                   :body payload
+                   ;;:format (ajxedn/edn-request-format)
+                   :response-format (ajxedn/edn-response-format)
+                   :on-success [:handle-success]
+                   :on-failure [:handle-error]}})))
 
 
 
@@ -137,17 +226,18 @@
 ;;
 ;;-----------------------------------------------------------
 (rf/reg-event-fx
- :successful-code-req
- (fn [{:keys [db]} [_ result]]
-   (println "::-->  :successful-code-req: " result)
+ :handle-success
+ (fn [{:keys [db]} [evt res]]
+   (println "::--> handle-success: " res)
 
    (let [m  (-> db
+                (transition-state evt)
                 (assoc :show-progress-bar false)
-                (assoc :code-text-results result))
-         msg (utils/status (str "Submit succeeded. Results: -> " result " <-")
+                (assoc :code-text-results res))
+         msg (utils/status (str "Submit succeeded. Results: -> " res " <-")
                            [] nil)]
-     (rf/dispatch [:upload-status msg])     
-     {:db m})))
+     {:db m
+      :dispatch [:upload-status msg]})))
 
 
 
@@ -157,17 +247,18 @@
 ;;
 ;;-----------------------------------------------------------
 (rf/reg-event-fx
- :failed-code-req
- (fn [{:keys [db]} [_ result]]
-   (println "::-->  :failed-code-req: " result)
+ :handle-error
+ (fn [{:keys [db]} [evt res]]
+   (println "::-->  handle-error: " res)
    
    (let [m  (-> db
+                (transition-state evt)
                 (assoc :show-progress-bar false)
-                (assoc :code-text-error result))
-         msg (utils/status (str "Submit failed with error message -> " (:last-error result) " <-")
-                           [(str "Status: " (:status result))
-                            (str "Status text: " (:status-text result))
-                            (str "Debug message: " (:debug-message result))] nil)]
+                (assoc :code-text-error res))
+         msg (utils/status (str "Submit failed with error message -> " (:last-error res) " <-")
+                           [(str "Status: " (:status res))
+                            (str "Status text: " (:status-text res))
+                            (str "Debug message: " (:debug-message res))] nil)]
 
-     (rf/dispatch [:upload-status msg])
-     {:db m})))
+     {:db m
+      :dispatch [:upload-status msg]})))

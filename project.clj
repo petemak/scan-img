@@ -33,6 +33,7 @@
   :main scan-img.server
   
   :profiles  {:dev {:dependencies [[binaryage/devtools "0.9.10"]
+                                   [fsmviz "0.1.3"]
                                    [peridot "0.5.1"]
                                    [clj-http "3.10.0"]
                                    [ring/ring-mock "0.4.0"]]

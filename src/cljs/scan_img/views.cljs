@@ -26,25 +26,29 @@
 
 
 
+
 ;;-----------------------------------------------------------
 ;; Indicator
 ;;----------------------------------------------------------
 (defn status-indicator []
   (let [status @(rf/subscribe [:upload-status])
-        tick @(rf/subscribe [:progress-tick])
+        tick   @(rf/subscribe [:progress-tick])
+        submitting? @(rf/subscribe [:submitting-data?])
         ptick (str tick "%")]
     (println "::--> Status --[" status "]--")
     (println "::--> Tick --[" tick "]--")
-    
-    (when (= "100" tick)
-      (println "::--> Sopping tick --[" tick "]--")       
+    (println "::--> Submitting  --[" submitting? "]--")
+
+    (if (and submitting? (< tick 100))
+      (swap! tick-status assoc :tick true)
       (swap! tick-status assoc :tick false))
+    
     [:div
      [:div {:class "progress"}
       [:div {:class ["progress-bar" "progress-bar-striped" "bg-success"]
              :role "progressbar"
              :style {:width ptick}
-             :aria-valuenow tick
+             :aria-valuenow (if @tick-status tick "100") 
              :aria-valuemin "0"
              :aria-valuemax "100"} ptick]]
      [:br]
@@ -69,6 +73,7 @@
            [:li {:key "err"} (str ":err " (:err cmd-messages))]
            (for [out output-list]
              [:li {:key (subs out 0 2)} out])]))]]))
+
 
 ;;-----------------------------------------------------------
 ;; Ajax halder functions
