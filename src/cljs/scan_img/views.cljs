@@ -4,6 +4,7 @@
             [scan-img.subs :as subs]
             [scan-img.utils :as utils]
             [scan-img.text-input :as txt]
+            [scan-img.message-panel :as msg]
             [ajax.core :refer [POST]]))
 
 
@@ -25,21 +26,21 @@
 (defonce ticker (js/setInterval dispatch-tick 400))
 
 
-
-
 ;;-----------------------------------------------------------
-;; Indicator
+;; Progress bar
 ;;----------------------------------------------------------
-(defn status-indicator []
-  (let [status @(rf/subscribe [:upload-status])
-        tick   @(rf/subscribe [:progress-tick])
-        submitting? @(rf/subscribe [:submitting-data?])
-        ptick (str tick "%")]
-    (println "::--> Status --[" status "]--")
-    (println "::--> Tick --[" tick "]--")
-    (println "::--> Submitting  --[" submitting? "]--")
+(defn progress-bar []
+  (let [tick   @(rf/subscribe [:progress-tick])
+        submitting?  @(rf/subscribe [:submitting-data?])        
+        done?  @(rf/subscribe [:done-submitting-data?])
 
-    (if (and submitting? (< tick 100))
+        tick2  (if done? "100" tick)
+        ptick (str tick2 "%")]
+    (println "::--> progress-bar tick:  --[" tick "]--")
+    (println "::--> progress-bar state --[" done? "]--")
+    (println "::--> progress-bar tick2 --[" tick2 "]--")
+
+    (if submitting?
       (swap! tick-status assoc :tick true)
       (swap! tick-status assoc :tick false))
     
@@ -48,10 +49,21 @@
       [:div {:class ["progress-bar" "progress-bar-striped" "bg-success"]
              :role "progressbar"
              :style {:width ptick}
-             :aria-valuenow (if @tick-status tick "100") 
+             :aria-valuenow tick2  
              :aria-valuemin "0"
-             :aria-valuemax "100"} ptick]]
-     [:br]
+             :aria-valuemax "100"} ptick]]]))
+
+
+
+;;-----------------------------------------------------------
+;; Status nndicator
+;;----------------------------------------------------------
+(defn status-indicator []
+  (let [status @(rf/subscribe [:upload-status])]
+    (println "::--> Status --[" status "]--")
+
+    
+    [:div
      [:div {:class "alert alert-success" :role "alert"}
       [:h4 (:title status)]
       [:ul
@@ -221,7 +233,10 @@
        [:div.col [txt/text-field]]]      
     [:hr]
     [:div.row
-     [:div.col [status-indicator]]]]])
+     [:div.col [progress-bar]]]
+    [:br]
+    [:div.row
+     [:div.col [msg/messages-view]]]]])
 
 
 

@@ -11,7 +11,7 @@
 (rf/reg-sub
  :upload-status
  (fn [db]
-   (:upload-status db)))
+   (:submission-results db)))
 
 
 (rf/reg-sub
@@ -106,14 +106,17 @@
    (= (:state db) :SUBMITTING-DATA)))
 
 
-
 ;;-----------------------------------------------------------
-;; Domino 4: querry effect of submitting code
+;; Domino 4: querry status
+;;           
 ;;-----------------------------------------------------------
 (rf/reg-sub
- :submit-code-text
+ :done-submitting-data?
  (fn [db]
-   (:show-progress-bar db)))
+   (or  (= (:state db) :SUCCESS)
+        (= (:state db) :ERROR-RESPONSE))))
+
+
 
 
 ;;-----------------------------------------------------------

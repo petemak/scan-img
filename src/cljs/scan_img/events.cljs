@@ -50,7 +50,7 @@
  (fn [{:keys [db]} [_ _]]
    (let [tick (:progress-tick db)
          ntick (if (< tick 100) (+ tick 5) 0)
-         new-tick  (if (not= :SUBMITTING-DATA (:state db)) 100 ntick)]
+         new-tick  (if (= :SUCCESS (:state db)) 100 ntick)]
      {:db (assoc db :progress-tick ntick)})))
 
 
@@ -60,8 +60,8 @@
 ;;-----------------------------------------------------------
 (rf/reg-event-fx
  :reset-ticker 
- (fn [{:keys [db]} [_ val]]
-   {:db (assoc db :progress-tick val)}))
+ (fn [{:keys [db]} [_ _]]
+   {:db (assoc db :progress-tick 0)}))
 
 
 
@@ -71,8 +71,13 @@
 (rf/reg-event-fx
  :reset-form 
  (fn [{:keys [db]} [_ _]]
-   (let [ndb (assoc db :file-selected "")]
-     {:db (assoc ndb :progress-tick 0)})))
+   {:db  (-> db 
+             (dissoc :submission-results)
+             (dissoc :file-selected "")          
+             (assoc  :progress-tick 0)
+             (assoc :code-text "")
+             (assoc :user-name "")
+             (assoc :password ""))}))
 
 
 ;;-----------------------------------------------------------
@@ -108,7 +113,8 @@
  (fn [{:keys [db]} [evt val]]
    {:db (-> db
             (assoc :code-text val)
-            (transition-state evt))}))
+            (transition-state evt))
+    :dispatch [:reset-ticker]}))
 
 
 ;-----------------------------------------------------------
@@ -119,7 +125,8 @@
  (fn [{:keys [db]} [evt val]]
    {:db (-> db
             (assoc :user-name val)
-            (transition-state evt))}))
+            (transition-state evt))
+    :dispatch [:reset-ticker]}))
 
 
 ;;-----------------------------------------------------------
@@ -130,21 +137,10 @@
  (fn [{:keys [db]} [evt val]]
    {:db (-> db
             (assoc :password val)
-            (transition-state evt))}))
+            (transition-state evt))
+    :dispatch [:reset-ticker]}))
 
 
-
-;;-----------------------------------------------------------
-;; Domino 2: comupte status if required fields
-;;-----------------------------------------------------------
-(rf/reg-event-fx
- :required-fields-filled
- (fn [{:keys [db]} [_ val]]
-   (let [c (:code-text db)
-         u (:user-name db)
-         p (:password db)
-         ]
-     {:db  (assoc db :required-fields-filled (and c u p))})))
 
 
 ;;-----------------------------------------------------------
@@ -233,11 +229,9 @@
    (let [m  (-> db
                 (transition-state evt)
                 (assoc :show-progress-bar false)
-                (assoc :code-text-results res))
-         msg (utils/status (str "Submit succeeded. Results: -> " res " <-")
-                           [] nil)]
+                (assoc :submission-results res))]
      {:db m
-      :dispatch [:upload-status msg]})))
+      :dispatch [:upload-status "Commands successfuly executed"]})))
 
 
 
@@ -254,7 +248,7 @@
    (let [m  (-> db
                 (transition-state evt)
                 (assoc :show-progress-bar false)
-                (assoc :code-text-error res))
+                (assoc :submission-results res))
          msg (utils/status (str "Submit failed with error message -> " (:last-error res) " <-")
                            [(str "Status: " (:status res))
                             (str "Status text: " (:status-text res))
