@@ -64,7 +64,7 @@
       (timbre/info "::--> process-code - reuslts from file service: " results)
       (-> results
           (assoc :message "Processing done")
-          (assoc :cmd-results results)
+          ;;(assoc :cmd-results results)
           ;;(assoc :size ??)
           (assoc :path (:cannonical-path results))
           (ok-resp)))))

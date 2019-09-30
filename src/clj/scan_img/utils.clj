@@ -154,6 +154,40 @@
   (let [m (Throwable->map e)]
     (into [] (map str (:via m)))))
 
+;;--------------------------------------------------------------
+;; Utility function for converting maps
+;; to strings
+;;--------------------------------------------------------------
+(defn map->strlst
+  "conver a map {:a 1 :b 2 :c 3}  to a list of strings 
+  [\":a 1\" \":b 2\" \":c 3\"]"
+  [m]
+  (into []        
+     (let [ks (keys m)]
+       (for [k ks]
+         (str k " " (k m))))))
+
+
+
+;;--------------------------------------------------------------
+;; Utility function for extracting results from
+;; an exception
+;;--------------------------------------------------------------
+(defn exception->strlst2
+  "Given an exception object like
+    {:exit -35545
+     :exception #error {:cause \"error=2, No such file or directory\"
+                        :via []  .... }}
+    then will generate a list of strings"
+  [e]
+  (-> e
+      (Throwable->map)
+      (:via)
+      (first)
+      (map->strlst)
+      (#(interpose "\n " %))
+      (#(apply str %))))
+
 
 
 ;;--------------------------------------------------------------
@@ -198,7 +232,7 @@
   [cmd result accum]
   (let [result (-> {}
                    (assoc :command cmd)
-                   (assoc :message "Command executed with an error...")
+                   (assoc :message "Command executed but exited with an error.")
                    (assoc :outstrlst (str/split (:err result) #"\n")))]
     (update accum :results conj result)))
 
@@ -215,8 +249,8 @@
   [cmd result accum]
   (let [result (-> {}
                    (assoc :command cmd)
-                   (assoc :message "Command failed with an exception...")
-                   (assoc :outstrlst (exception->strlst (:exception result))))]
+                   (assoc :message "Command executed but exited with an exception.")
+                   (assoc :outstrlst (exception->strlst2 (:exception result))))]
     (update accum :results conj result)))
 
 
@@ -241,7 +275,7 @@
   (timbre/info "::->  execresult->strlist - results for commnd: " result)
   (cond
     (nil? result) (assoc accum :outstrlst ["Unknown executaion error!"
-                                        "Examine server logs e.g. figwheel_server.log"])
+                                           "Examine server logs e.g. figwheel_server.log"])
     (some? (:out result)) (out-map cmd result accum)
     (some? (:err result)) (err-map cmd result accum)
     (some? (:exception result)) (exc-map cmd result accum)))

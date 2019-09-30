@@ -84,7 +84,16 @@
   Example:
   {:name \"Docker Image Scanner\"
    :executable-cmd [[\"command-1\" \"params-1\"]
-                    [\"command-2\" \"params-2\"]]}"
+                    [\"command-2\" \"params-2\"]]}
+
+  The return map contains a list of maps mapped to the key :results
+  Each map in the list contains tje executed command and results
+  {:results [ {:command \"bla bla\"
+               :message \"Message...\"
+               :outstrlst \"exception...\"}
+              {:command ...
+               :message ...
+               outstrlst ...}  ]}"
   [data]
   (timbre/info "::-> run-commands! - input data - :file-name " (:file-name data))
   (timbre/info "::-> run-commands! - input data - :file-type " (:file-type data))
