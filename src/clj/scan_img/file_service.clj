@@ -95,11 +95,12 @@
                :message ...
                outstrlst ...}  ]}"
   [data]
-  (timbre/info "::-> run-commands! - input data - :file-name " (:file-name data))
-  (timbre/info "::-> run-commands! - input data - :file-type " (:file-type data))
-  (timbre/info "::-> run-commands! - input data - :file-data " (:file-data data))
+  (timbre/info "::-> run-commands! - input data: " data)
   (if-let [config (resolve-command-config! data)]
     (let [commands (process-command-params (:executable-cmd config) data)]
+      (timbre/info "::==> run-commands! - commands processed for execution: " (str commands))
+      (timbre/info "::==> rund-command! with config found: " config)
+
       (loop [cmds commands
              accum {:results []}] ;; fix this: how to ensure results are in a vector and not a list??
         (if (empty? cmds)
@@ -107,8 +108,8 @@
           (do
             (let [cmd (first cmds)
                   result @(exec/sh cmd {:shutdown true})]
-              (timbre/info "::==> rund-command! with config found: " config)
-              (timbre/info "::==> run-command! executed --[" cmd "]-- result: " result)
+              (timbre/info "::==> run-command! executed --[" cmd "]--")
+              (timbre/info "::==> run-command! results --[ " result "]--")
               (recur (rest cmds) (utils/execresult->strlist cmd  result accum)))))))
     (do
       (timbre/info "::-> run-commands! - Command execution failed. Commands not found!")
@@ -206,6 +207,7 @@
   The consumer on the channel will take
   approprient action"
   [code user-name password]
+  (timbre/info "::--> reg-code-event: code = " code ", name = " user-name ", pwd = " password)  
   (let [descr {:file-data code
                :file-name "docker-file"
                :file-type :docker-text

@@ -202,13 +202,13 @@
  (fn [{:keys [db]} [event _]]
    (println "::--> try-submit: " db)
    (let [{:keys [code-text user-name password]} db
-         payload {:code code-text :name user-name :password password}] 
+         payload {:code code-text :name user-name :password password}]
      {:db (transition-state db event)
       :http-xhrio {:method :post
                    :uri "/upload/code"
                    :timeout 10000
-                   :body payload
-                   ;;:format (ajxedn/edn-request-format)
+                   :params payload       ;; :params requires :format
+                   :format (ajxedn/edn-request-format)
                    :response-format (ajxedn/edn-response-format)
                    :on-success [:handle-success]
                    :on-failure [:handle-error]}})))

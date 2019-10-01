@@ -55,7 +55,6 @@
 (defn read-edn-file
   "Read an edn file from the specified path"
   [path]
-  (println "::-> Path = " path)
   (-> path
       (slurp)
       (edn/read-string)))
