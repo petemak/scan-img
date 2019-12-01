@@ -60,7 +60,7 @@
         password (:password params)]
     (timbre/info "::--> process-code - params: " params)
     
-    (let [results (fp/reg-code-event code user-name password)]
+    (let [results (fp/sync-reg-code-event code user-name password)]
       (timbre/info "::--> process-code - reuslts from file service: " results)
       (-> results
           (assoc :message "Processing done")

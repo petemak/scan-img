@@ -1,7 +1,8 @@
 (ns scan-img.handler_test
   (:require [clojure.test :refer :all]
             [ring.mock.request :as mock]
-            [clj-http.client :as client]))
+            [clj-http.client :as client]
+            [scan-img.handler :as handler]))
 
 
 
@@ -16,3 +17,17 @@
                                                  ;;:mime-subtype "foo"
                                      
                                                                        }))
+
+
+;; Mock POST "upload/code"
+(def code-req (-> (mock/request :post "/upload/code")
+                  (mock/content-type "application/edn")
+                  (mock/body "{:code \"code\"
+                               :name \"s34234\"
+                               :password \"wrteert\"}")))
+
+
+;; 
+(deftest code-upload
+  (testing "edn"
+    (is (not= nil (handler/handler code-req) ))))

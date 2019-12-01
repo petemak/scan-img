@@ -1,6 +1,5 @@
 (ns foundation.repl
   (:require [clojure.string :as str]
-            [net.cgrand.enlive-html :as enlive]
             [clojure.data.json :as json] ))
 
 

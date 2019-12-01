@@ -19,10 +19,10 @@
 ;;--------------------------------------------------------------
 ;; consumer for file processing
 ;;--------------------------------------------------------------
-(defn save-file
+(defn save-file!
   "Save file to resources/public/uploads. "
   [data]
-  (timbre/info "::--> save-file: input data " data)
+  (timbre/info "::--> save-file!: input data " data)
   (let [unique-name (utils/unique-str (:file-name data))
         target (io/file "resources" "public" "uploads" unique-name)
         can-path (utils/ensure-parent-dir! target)
@@ -125,6 +125,9 @@
                                  nil))))
 
 
+
+
+
 ;;--------------------------------------------------------------
 ;; Start consumer for file processing
 ;;--------------------------------------------------------------
@@ -139,7 +142,7 @@
   (async/go-loop [data (async/<! in)]
     (timbre/info "::-> start-processor - data from queue: " data)
     (when data
-      (when-let [path (save-file data)]
+      (when-let [path (save-file! data)]
         (let [cmd-output (run-commands! (assoc data :cannonical-path path))
               results (assoc cmd-output :cannonical-path path)]
           (async/>! out results)))
@@ -201,9 +204,9 @@
 ;; Kicks off file processing as soon as ring handler has recieved
 ;; code upload
 ;;--------------------------------------------------------------
-(defn reg-code-event
-  "Register an event on the fileupload channel to signal that
-  a file was uploaded. Argumets are the file source, file name and type.
+(defn async-reg-code-event
+  "Register a code upload event o the channel to signal that
+  a code  was uploaded. Argumets are the file source, file name and type.
   The consumer on the channel will take
   approprient action"
   [code user-name password]
@@ -214,3 +217,21 @@
                :user-name user-name
                :user-password password}]
     (queue-event descr)))
+
+
+(defn sync-reg-code-event
+  "Register a code upload event o the channel to signal that
+  a code  was uploaded. Argumets are the file source, file name and type.
+  The consumer on the channel will take
+  approprient action"  
+  [code user-name password]
+  (timbre/info "::--> sync-reg-code-event: code = " code ", name = " user-name ", pwd = " password)  
+  (let [data {:file-data code
+              :file-name "docker-file"
+              :file-type :docker-text
+              :user-name user-name
+              :user-password password}]    
+    (when-let [path (save-file! data)]
+      (let [cmd-output (run-commands! (assoc data :cannonical-path path))
+          results (assoc cmd-output :cannonical-path path)]))))
+
