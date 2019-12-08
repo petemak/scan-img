@@ -22,7 +22,8 @@
 (defn save-file!
   "Save file to resources/public/uploads. "
   [data]
-  (timbre/info "::--> save-file!: input data " data)
+  (timbre/info "::--> save-file!: name of data to save " (:file-me data) "... ")
+  (timbre/info "::--> save-file!: type of data to save " (:file-type data) "... ")  
   (let [unique-name (utils/unique-str (:file-name data))
         target (io/file "resources" "public" "uploads" unique-name)
         can-path (utils/ensure-parent-dir! target)
@@ -95,34 +96,28 @@
                :message ...
                outstrlst ...}  ]}"
   [data]
-  (timbre/info "::-> run-commands! - input data: " data)
+  (timbre/info "::-> run-commands! - cannonical path: " (:cannonical-path data))
   (if-let [config (resolve-command-config! data)]
     (let [commands (process-command-params (:executable-cmd config) data)]
       (timbre/info "::==> run-commands! - commands processed for execution: " (str commands))
       (timbre/info "::==> rund-command! with config found: " config)
 
-      (loop [cmds commands
-             accum {:results []}] ;; fix this: how to ensure results are in a vector and not a list??
-        (if (empty? cmds)
-          accum
-          (do
-            (let [cmd (first cmds)
-                  result @(exec/sh cmd {:shutdown true})]
-              (timbre/info "::==> run-command! executed --[" cmd "]--")
-              (timbre/info "::==> run-command! results --[ " result "]--")
-              (recur (rest cmds) (utils/execresult->strlist cmd  result accum)))))))
+      (try 
+        (loop [cmds commands
+               accum {:results []}] ;; fix this: how to ensure results are in a vector and not a list??
+          (if (empty? cmds)
+            accum
+            (do
+              (let [cmd (first cmds)
+                    result @(exec/sh cmd {:shutdown true})]
+                (timbre/info "::==> run-command! executed --[" cmd "]--")
+                ;;(timbre/info "::==> run-command! results --[ " result "... ]--")
+                (recur (rest cmds) (utils/execresult->strlist cmd  result accum))))))
+        (catch Exception e          
+          (utils/cmd-error-msg data commands  {:results []}))))
     (do
       (timbre/info "::-> run-commands! - Command execution failed. Commands not found!")
-      (utils/execresult->strlist {:exit nil
-                                  :out nil
-                                  :err (str  "Command execution for failed!\n"
-                                             "File name: " (:file-name data) "\n"
-                                             "File type: " (:file-type data) "\n"
-                                             "Commands: " (:file-type data) "\n"
-                                             "Or if its a command file make sure 
-                                              commands are specified.")
-                                  :exception nil}
-                                 nil))))
+      (utils/cmd-error-msg data nil {:results []}))))
 
 
 
@@ -210,13 +205,13 @@
   The consumer on the channel will take
   approprient action"
   [code user-name password]
-  (timbre/info "::--> reg-code-event: code = " code ", name = " user-name ", pwd = " password)  
-  (let [descr {:file-data code
-               :file-name "docker-file"
-               :file-type :docker-text
-               :user-name user-name
-               :user-password password}]
-    (queue-event descr)))
+  (timbre/info "::--> reg-code-event: code size = " (count code) ", name = " user-name ", pwd = " password  
+               (let [descr {:file-data code
+                            :file-name "docker-file"
+                            :file-type :docker-text
+                            :user-name user-name
+                            :user-password password}]
+                 (queue-event descr))))
 
 
 (defn sync-reg-code-event
@@ -225,13 +220,13 @@
   The consumer on the channel will take
   approprient action"  
   [code user-name password]
-  (timbre/info "::--> sync-reg-code-event: code = " code ", name = " user-name ", pwd = " password)  
+  (timbre/info "::--> sync-reg-code-event: code size = " (count code) ", name = " user-name ", pwd = " password)  
   (let [data {:file-data code
               :file-name "docker-file"
               :file-type :docker-text
               :user-name user-name
               :user-password password}]    
     (when-let [path (save-file! data)]
-      (let [cmd-output (run-commands! (assoc data :cannonical-path path))
-          results (assoc cmd-output :cannonical-path path)]))))
+      (let [cmd-output (run-commands! (assoc data :cannonical-path path))]
+        (assoc cmd-output :cannonical-path path) ))))
 

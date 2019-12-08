@@ -7,6 +7,15 @@
 
 
 ;;--------------------------------------------------------------
+;; Given a text, take a string of given size
+;;--------------------------------------------------------------
+(defn take-str
+  "Take the given length from the text"
+  [n txt]
+  (apply str (take n txt)))
+
+
+;;--------------------------------------------------------------
 ;; Generate a uuid as string for prefixing file names
 ;;--------------------------------------------------------------
 (defn uid-str!
@@ -271,11 +280,28 @@
    :exception #error {...}}"
   [cmd result accum]
   (timbre/info "::->  execresult->strlist - for commnd: " cmd)
-  (timbre/info "::->  execresult->strlist - results for commnd: " result)
+  (timbre/info "::->  execresult->strlist - output: " (:out result))
   (cond
     (nil? result) (assoc accum :outstrlst ["Unknown executaion error!"
                                            "Examine server logs e.g. figwheel_server.log"])
     (some? (:out result)) (out-map cmd result accum)
     (some? (:err result)) (err-map cmd result accum)
     (some? (:exception result)) (exc-map cmd result accum)))
+
+
+
+(defn cmd-error-msg
+  "Create an error message for executing commands on
+   the provided data and possible results."
+  [data cmds results]
+  (execresult->strlist "see commands"
+                       {:exit nil
+                        :out nil
+                        :err (str  "Command execution for failed!\n"
+                                   "File name: " (:file-name data) "\n"
+                                   "File type: " (:file-type data) "\n"
+                                   "Commands:  " cmds  "\n"
+                                   "Make sure commands are specified and correct.")
+                        :exception nil}
+                       results))
 
