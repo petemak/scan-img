@@ -1,6 +1,7 @@
 (ns scan-img.views
   (:require [cljs.reader :as cr]
             [re-frame.core :as rf]
+            [scan-img.navbar :as nv]
             [scan-img.subs :as subs]
             [scan-img.utils :as utils]
             [scan-img.text-input :as txt]
@@ -223,9 +224,7 @@
 (defn main-panel
   []
   [:div.container
-   [:div.container
-    [:nav.navbar.navbar-dark.bg-primary
-     [:span.navbar-text "Docker Image Scanner"]] ]
+   [nv/nav-bar]
    [:br]
    [:div.container.conatiner_fluid
     [:div.row
