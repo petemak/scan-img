@@ -15,7 +15,9 @@
       [:li.nav-item
        [:a.nav-link {:href "#"} "Login"]]]
 
-     [:span.navbar-text
-        [:a.nav-link {:href "#"} "Toggle"]]
+     [:div.outerDivFull
+      [:div.switchToggle
+       [:input {:type "checkbox" :id "upload-type"}]
+       [:label {:for "upload-type"} ". Image"]]]
      [:span.navbar-text
       [:a.nav-link {:href "#"} "Login"]]]]])
