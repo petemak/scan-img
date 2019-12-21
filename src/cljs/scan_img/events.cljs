@@ -11,6 +11,7 @@
    [day8.re-frame.http-fx])) ;; wil cause :http-xhrio to reister with re-frame
 
 
+
 ;;-----------------------------------------------------------
 ;; Initialises app-db. Event send from core.cljs
 ;;-----------------------------------------------------------
@@ -256,3 +257,16 @@
 
      {:db m
       :dispatch [:upload-status msg]})))
+
+
+;;-----------------------------------------------------------
+;; Domino 2: switch ui clicked
+;;-----------------------------------------------------------
+(rf/reg-event-fx
+ :view-type
+ (fn [{:keys [db]} [evt val]]
+   (println "::-->  reg-event-fx: db = " db)
+   {:db (assoc db :view-type val)}))
+
+
+

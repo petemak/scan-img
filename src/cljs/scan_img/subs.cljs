@@ -92,7 +92,7 @@
 ;;-----------------------------------------------------------
 (rf/reg-sub
  :submit-disabled?
- (fn [db]
+ (fn [db _]
    (not=  (:state db) :READY)))
 
 
@@ -102,7 +102,7 @@
 ;;-----------------------------------------------------------
 (rf/reg-sub
  :submitting-data?
- (fn [db]
+ (fn [db _]
    (= (:state db) :SUBMITTING-DATA)))
 
 
@@ -134,5 +134,14 @@
 ;;-----------------------------------------------------------
 (rf/reg-sub
  :failed-code-req
- (fn [db]
+ (fn [db _]
    (:code-text-error db)))
+
+
+;;-----------------------------------------------------------
+;; Domino 4: querry effect of setting view type
+;;-----------------------------------------------------------
+(rf/reg-sub
+ :view-type
+ (fn [db _]
+   (:view-type db)))
