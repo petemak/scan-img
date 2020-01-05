@@ -78,7 +78,8 @@
              (assoc  :progress-tick 0)
              (assoc :code-text "")
              (assoc :user-name "")
-             (assoc :password ""))}))
+             (assoc :password ""))
+    :dispatch [:upload-status nil]}))
 
 
 ;;-----------------------------------------------------------
@@ -232,7 +233,7 @@
                 (assoc :show-progress-bar false)
                 (assoc :submission-results res))]
      {:db m
-      :dispatch [:upload-status "Commands successfuly executed"]})))
+      :dispatch [:upload-status res]})))
 
 
 

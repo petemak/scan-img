@@ -4,7 +4,7 @@
             [scan-img.navbar :as nv]
             [scan-img.subs :as subs]
             [scan-img.utils :as utils]
-            [scan-img.text-input :as txt]
+            [scan-img.code-view :as cdv ]
             [scan-img.image-view :as imv]
             [scan-img.message-panel :as msg]
             [ajax.core :refer [POST]]))
@@ -101,7 +101,7 @@
      (let [view-type @(rf/subscribe [:view-type])]
        (if (= view-type :upload-docker-image) 
          [:div.col [imv/upload-form]] 
-         [:div.col [txt/text-field]]))]      
+         [:div.col [cdv/text-field]]))]      
     [:hr]
     [:div.row
      [:div.col [progress-bar]]]

@@ -4,7 +4,8 @@
             [scan-img.utils :as utils]
             [clojure.core.async :as async]
             [clj-commons-exec :as exec]
-            [taoensso.timbre :as timbre]))
+            [taoensso.timbre :as timbre]
+            [chord.http-kit :refer [with-channel]]))
 
 
 (timbre/set-level! :debug)
@@ -66,7 +67,7 @@
   [data]
   (let [type (:file-type data)]
     (cond
-      (= type "image") (utils/read-config)
+      (= type :docker-image) (utils/read-config)
       (= type :docker-text) (utils/read-config)              
       (= type "command") (utils/edn-from-file (:file-data data))
       :else nil)))
@@ -185,14 +186,45 @@
 ;; Kicks off file processing as soon as ring handler has recieved
 ;; an image upload
 ;;--------------------------------------------------------------
-(defn reg-upload-event
+(defn async-reg-image-event
   "Register an event on the fileupload channel to signal that
   a file was uploaded. Argumets are the file source, file name and type.
   The consumer on the channel will take
   approprient action"
-  [file-src file-name file-type]
-  (let [descr {:file-data file-src :file-name file-name :file-type file-type}]
+  [file-src file-name file-type user-name password]
+  (let [descr {:file-data file-src
+               :file-name file-name
+               :file-type :docker-image
+               :user-name user-name
+               :password password}]
     (queue-event descr)))
+
+
+
+;;--------------------------------------------------------------
+;; Kicks off file processing as soon as ring handler has recieved
+;; an image upload
+;;
+;; For SSE see https://github.com/jarohen/chord
+;;--------------------------------------------------------------
+(defn sync-reg-image-event
+  "Register an event on the fileupload channel to signal that
+  a file was uploaded. Argumets are the file source, file name and type.
+  The consumer on the channel will take
+  approprient action"
+  [image-file file-name file-type user-name password]
+  (let [data {:file-data image-file
+              :file-name file-name
+              :file-type :docker-image
+              :user-name user-name
+              :password password}]
+
+    (when-let [path (save-file! data)]
+      (let [cmd-output (run-commands! (assoc data :cannonical-path path))]
+        (assoc cmd-output :cannonical-path path) ))) )
+
+
+
 
 
 ;;--------------------------------------------------------------

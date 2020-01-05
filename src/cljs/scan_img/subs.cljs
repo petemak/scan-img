@@ -11,7 +11,8 @@
 (rf/reg-sub
  :upload-status
  (fn [db]
-   (:submission-results db)))
+   #_(:submission-results db)
+   (:upload-status db)))
 
 
 (rf/reg-sub

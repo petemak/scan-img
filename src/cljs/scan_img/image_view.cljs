@@ -4,12 +4,11 @@
             [scan-img.navbar :as nv]
             [scan-img.subs :as subs]
             [scan-img.utils :as utils]
-            [scan-img.text-input :as txt]
             [scan-img.message-panel :as msg]
             [ajax.core :refer [POST]]))
 
 
-(defonce selected-upload-type (atom {:upload-type "image"}))
+;;(defonce selected-upload-type (atom {:upload-type "image"}))
 
 ;;-----------------------------------------------------------
 ;; created upload message
@@ -52,14 +51,17 @@
   
   (let [rsp (cr/read-string resp)
         upl-messages (upload-messages rsp)
-        cmd-messages (:cmd-results rsp)   
-        sts (utils/status "Upload succeeded"
-                    upl-messages
-                    cmd-messages)]
-    (println "::==> handle-reponse-ok: upload nessage " upl-messages)
-    (println ":==> handle-reponse-ok: cmd message" cmd-messages)
+        cmd-messages (:cmd-results rsp)]
+    ;; cmd-messages is a map with a list mapped to the key
+    ;; {:results [{:command "...."
+    ;;             :message "..."
+    ;;             :outstrlst "..."}]}
+    ;;
+    (println "::==> handle-response-ok: upload nessage " upl-messages)
+    (println "::==> handle-response-ok: cmd message" cmd-messages)
+    (println "::==> handle-response-ok: results: " (:results cmd-messages))
     (rf/dispatch [:reset-ticker 100])
-    (rf/dispatch [:upload-status sts])))
+    (rf/dispatch [:upload-status cmd-messages])))
 
 ;;-----------------------------------------------------------
 ;; Handle error in messahe
@@ -85,12 +87,23 @@
   (let [file-el (.getElementById js/document file-id)
         file-name (.-name file-el)
         file-data (aget (.-files file-el) 0)
+        user-name (.-value (.getElementById js/document "user-name"))
+        password  (.-value (.getElementById js/document "password"))
+        
         form-data (doto
                     (js/FormData.)
                     (.append file-name file-data)
-                    (.append "upload-type" (:upload-type file-type)))
+                    (.append "upload-type" file-type)
+                    (.append :user-name user-name)
+                    (.append :password password))
+
         
-        sts (utils/status (str  "Uploading file '" file-name "' with type '" @selected-upload-type "'") [] nil)]
+        sts (utils/status-message (str  "Uploading file '" file-name "'") "Upload started..." nil)]
+    
+    
+    (println "::--> image-view/upload-file: sts = " sts )
+    (println "::--> image-view/upload-file: password = " password)
+
     (when (some? file-data)
       (POST "/upload/scan" {:body form-data
                             ;; :response-format :json
@@ -99,8 +112,7 @@
                             :error-handler handle-response-error})
 
       (rf/dispatch [:upload-status sts])
-      ;;(swap! tick-status assoc :tick true)
-      )))
+      (swap! tick-status assoc :tick true))))
 
 
 (defn reset-form
@@ -143,31 +155,9 @@
 
         [:br]
         [:div {:class "row"}
-         [input-field :user-name :user-name nil         "User Name" val-unm on-chg-unm true]
-         [input-field :password  :password  "password"  "Password"  val-pwd on-chg-pwd true]] 
+         [input-field "user-name" :user-name nil         "User Name" val-unm on-chg-unm true]
+         [input-field "password"  :password  "password"  "Password"  val-pwd on-chg-pwd true]] 
 
-        (comment      
-          [:hr]
-          [:div {:class "form-group"}
-           [:label "Upload Type"]
-           [:div {:class "form-check"}
-            [:label {:class "form-check-label"}
-             [:input {:type "radio"
-                      :class "form-check-input"
-                      :id "upload-type-image"
-                      :name "upload-type"
-                      :value "image"
-                      :checked true
-                      :on-click  #(swap! selected-upload-type assoc :upload-type "image")}] "Docker Image"]]
-           [:div {:class "form-check"}
-            [:label {:class "form-check-label"}
-             [:input {:type "radio"
-                      :class "form-check-input"
-                      :id "upload-type-command"
-                      :name "upload-type"
-                      :value "commands"
-                      :on-click #(swap! selected-upload-type assoc :upload-type "command")}] "Command file"]]]
-          )
         [:hr]
         [:div {:class "form-group"}
          [:button {:type "reset"
@@ -176,6 +166,6 @@
          
          [:button {:type "button"
                    :class "btn btn-primary float-right"
-                   :on-click #(upload-file "file" @selected-upload-type)} "Start..."]]]])))
+                   :on-click #(upload-file "file" "image")} "Start..."]]]])))
 
 

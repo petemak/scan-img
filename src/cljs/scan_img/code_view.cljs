@@ -1,4 +1,4 @@
-(ns scan-img.text-input
+(ns scan-img.code-view
   (:require [cljs.reader :as cr]
             [reagent.core :as r]
             [re-frame.core :as rf]

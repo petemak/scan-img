@@ -7,7 +7,7 @@
             [ring.util.response :as ring-response]
             [ring.middleware.reload :refer [wrap-reload]]
             [ring.middleware.params :refer [wrap-params]]
-            [ring.middleware.edn :refer [wrap-edn-params]]            
+            [ring.middleware.edn :refer [wrap-edn-params]]
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]))
 
 (timbre/set-level! :debug)
@@ -26,17 +26,20 @@
 (defn process-file
   "Handler processes file uploads
    First saves and then posts uploaded event on processing quest"
-  [params]
-  (let [file (get params "file")
+  [req]
+  (let [params (:params req)
+        file (get params "file")
         file-data (:tempfile file)
         file-name (:filename file)
         file-size (:size file)
         file-type (get params "upload-type")
+        user-name (:user-name params)
+        password (:password params)
         resp-data (dissoc file :tempfile)]
     (timbre/info "::--> process-file upload - params: " params)
     (timbre/info "::--> process-file upload - :upload-type : " file-type)
-    
-    (let [results (fp/reg-upload-event file-data file-name file-type)]
+    ;;
+    (let [results (fp/sync-reg-image-event file-data file-name file-type user-name password)]
       (timbre/info "::--> process-file upload - reuslts from file service: " results)
       (-> resp-data
           (assoc :message (str  "File [" file-name "] saved"))
@@ -99,7 +102,7 @@
 ;;       :params combines both :query-params and :form-params
 ;;--------------------------------------------------------------
 (defroutes upload-routes
-  (POST "/upload/scan" {params :params} (process-file params))
+  (POST "/upload/scan" request (process-file request))
   (POST "/upload/code" {params :params} (process-code params)))
 
 (def wrapped-upload-routes

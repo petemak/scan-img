@@ -10,6 +10,7 @@
                  [selmer "1.12.13"]
                  [ring "1.7.1"]
                  [cljs-ajax "0.8.0"]
+                 [jarohen/chord "0.8.1"]
                  [yogthos/config "1.1.2"]
                  [fogus/ring-edn "0.3.0"]
                  [com.taoensso/timbre "4.10.0"]
