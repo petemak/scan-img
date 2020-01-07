@@ -7,6 +7,7 @@
             [scan-img.code-view :as cdv ]
             [scan-img.image-view :as imv]
             [scan-img.message-panel :as msg]
+            [scan-img.progress-bar :as pbar]
             [ajax.core :refer [POST]]))
 
 
@@ -104,7 +105,7 @@
          [:div.col [cdv/text-field]]))]      
     [:hr]
     [:div.row
-     [:div.col [progress-bar]]]
+     [:div.col [pbar/progress-bar]]]
     [:br]
     [:div.row
      [:div.col [msg/messages-view]]]]])

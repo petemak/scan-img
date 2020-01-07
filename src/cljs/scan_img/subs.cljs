@@ -31,6 +31,16 @@
 
 
 ;;-----------------------------------------------------------
+;; Domino 4: querry effect of progressing the ticker - 2
+;;-----------------------------------------------------------
+(rf/reg-sub
+ :progress-bar/actual-value
+ (fn [db]
+   (:progress-bar/actual-value db)))
+
+
+
+;;-----------------------------------------------------------
 ;; Domino 4: querry effect of resetting the ticker
 ;;-----------------------------------------------------------
 (rf/reg-sub

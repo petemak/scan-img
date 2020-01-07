@@ -76,7 +76,8 @@
                            (str "Failure type: " (:failure ctx))
                            (str "Response message: " (:message rsp))]
                     nil)]
-    (println "::-> handle-reponse-error: rsp " rsp)
+    (println "::-> handle-reponse-error: response " (:response ctx))
+    (println "::-> handle-reponse-error: rsp " rsp)    
     (rf/dispatch [:upload-status sts] )))
 
 
@@ -84,6 +85,7 @@
 ;; Handler for upload-button
 ;;-----------------------------------------------------------
 (defn upload-file [file-id file-type]
+  (rf/dispatch [:submit-clicked])
   (let [file-el (.getElementById js/document file-id)
         file-name (.-name file-el)
         file-data (aget (.-files file-el) 0)
@@ -112,7 +114,9 @@
                             :error-handler handle-response-error})
 
       (rf/dispatch [:upload-status sts])
-      (swap! tick-status assoc :tick true))))
+      
+      #_(swap! tick-status assoc :tick true)
+      )))
 
 
 (defn reset-form

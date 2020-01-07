@@ -5,6 +5,31 @@
 
 
 
+(defn list-to-ul
+  "Create a UL from a list"
+  [strlst]
+  [:ul {:class "list-unstyled"}
+    (for [st strlst]
+      [:li {:id (subs st 0 5)} st])]  )
+
+(defn map-to-ul
+  "Create a UL from a map"
+  [strlst]
+  [:ul {:class "list-unstyled"}
+    (for [st (vals strlst)]
+      [:li {:id (subs st 0 5)} st])]  )
+
+
+(defn outstr->str
+  "Create a string from the specified value"
+  [outstr]
+  (cond
+    (instance? cljs.core/PersistentVector outstr) (list-to-ul outstr)
+    (instance? cljs.core/List outstr) (list-to-ul outstr)
+    (instance? cljs.core/PersistentArrayMap outstr) (map-to-ul outstr)
+    :else [:p outstr]))
+
+
 ;;--------------------------------------------------------------
 ;; Run commands. 
 ;; side effects!!!
@@ -19,16 +44,17 @@
                outstrlst ...}  ]}"
 (defn message-view
   [msg]
-  (println "::-> message: " msg)
+  (println "::--> message-view message: " msg)
+  (println "::--> type msg: " (type msg))
   [:div {:class "alert alert-info alert-dismissible fade show"}
+   [:button {:type "button" :class "close" :data-dismiss "alert"} "x"] 
    [:h5 {:class "alert-heading"} "Command: " (:command msg)]
    [:br]
    [:p "Results: " (:message msg)]
-   [:br]
-   [:p "Details: " (:outstrlst msg)]
 
-   
-   [:button {:type "button" :class "close" :data-dismiss "alert"} "x"]])
+   (when (:outstrlst msg) 
+     [:hr]
+     (outstr->str (:outstrlst msg)))])
 
 
 (defn messages-view

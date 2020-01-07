@@ -55,6 +55,29 @@
      {:db (assoc db :progress-tick ntick)})))
 
 
+;;-----------------------------------------------------------
+;; Domino 2: comupte effect of ticker - 2
+;;-----------------------------------------------------------
+(rf/reg-event-fx
+ :progress-bar/tick
+ (fn [{:keys [db]} [evt val]]
+   (let [new-tick (+ (:progress-bar/actual-value db) val)]
+     (if (>= new-tick 100)
+       {:db (assoc db :progress-bar/actual-value 100)}
+       {:db (assoc db :progress-bar/actual-value new-tick)}))))
+
+;;-----------------------------------------------------------
+;; Domino 2: comupte effect of resetting ticker - 2
+;;-----------------------------------------------------------
+(rf/reg-event-fx
+ :progress-bar/reset
+ (fn [{:keys [db]} [evt val]]
+   {:db (assoc db :progress-bar/actual-value 0)}))
+
+
+
+
+
 
 ;;-----------------------------------------------------------
 ;; Domino 2: comupte effect of resetting the ticker
