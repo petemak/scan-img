@@ -31,12 +31,12 @@
 
 
 ;;-----------------------------------------------------------
-;; Domino 4: querry effect of progressing the ticker - 2
+;; Domino 4: querry effect of activating the ticker - 2
 ;;-----------------------------------------------------------
 (rf/reg-sub
- :progress-bar/actual-value
+ :progress-bar/active
  (fn [db]
-   (:progress-bar/actual-value db)))
+   (:progress-bar/active db)))
 
 
 

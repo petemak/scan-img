@@ -66,17 +66,24 @@
        {:db (assoc db :progress-bar/actual-value 100)}
        {:db (assoc db :progress-bar/actual-value new-tick)}))))
 
+
 ;;-----------------------------------------------------------
-;; Domino 2: comupte effect of resetting ticker - 2
+;; Domino 2: comupte effect of starting the ticker - 2
 ;;-----------------------------------------------------------
 (rf/reg-event-fx
- :progress-bar/reset
+ :progress-bar/start
  (fn [{:keys [db]} [evt val]]
-   {:db (assoc db :progress-bar/actual-value 0)}))
+   {:db (update db :progress-bar/active true)
+    :dispatch [:progress-bar/tick 0]}))
 
-
-
-
+;;-----------------------------------------------------------
+;; Domino 2: comupte effect of stopping the ticker - 2
+;;-----------------------------------------------------------
+(rf/reg-event-fx
+ :progress-bar/stop
+ (fn [{:keys [db]} [evt val]]
+   {:db (update db :progress-bar/active fasle)
+    :dispatch [:progress-bar/tick 100]}))
 
 
 ;;-----------------------------------------------------------
