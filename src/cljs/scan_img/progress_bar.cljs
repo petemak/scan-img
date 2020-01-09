@@ -12,8 +12,8 @@
 (defn dispatch-tick
   "Dispatch ticking event"
   []
-  (let [active? @(rf/subscribe [:progress-bar/active])]
-    (if active?
+  (let [switch-on? @(rf/subscribe [:progress-bar/ticker-switch])]
+    (if switch-on?
       (rf/dispatch [:progress-bar/tick 5]))))
 
 

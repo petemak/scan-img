@@ -73,7 +73,7 @@
 (rf/reg-event-fx
  :progress-bar/start
  (fn [{:keys [db]} [evt val]]
-   {:db (update db :progress-bar/active true)
+   {:db (update db :progress-bar/ticker-switch true)
     :dispatch [:progress-bar/tick 0]}))
 
 ;;-----------------------------------------------------------
@@ -82,7 +82,7 @@
 (rf/reg-event-fx
  :progress-bar/stop
  (fn [{:keys [db]} [evt val]]
-   {:db (update db :progress-bar/active fasle)
+   {:db (update db :progress-bar/ticker-switch false)
     :dispatch [:progress-bar/tick 100]}))
 
 

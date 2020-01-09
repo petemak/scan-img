@@ -34,9 +34,9 @@
 ;; Domino 4: querry effect of activating the ticker - 2
 ;;-----------------------------------------------------------
 (rf/reg-sub
- :progress-bar/active
+ :progress-bar/ticker-switch
  (fn [db]
-   (:progress-bar/active db)))
+   (:progress-bar/ticker-switch db)))
 
 
 
