@@ -30,15 +30,6 @@
    (str (:progress-tick db))))
 
 
-;;-----------------------------------------------------------
-;; Domino 4: querry effect of activating the ticker - 2
-;;-----------------------------------------------------------
-(rf/reg-sub
- :progress-bar/ticker-switch
- (fn [db]
-   (:progress-bar/ticker-switch db)))
-
-
 
 ;;-----------------------------------------------------------
 ;; Domino 4: querry effect of resetting the ticker
@@ -156,3 +147,25 @@
  :view-type
  (fn [db _]
    (:view-type db)))
+
+;;-----------------------------------------------------------
+;;-----------------------------------------------------------
+
+
+
+;;-----------------------------------------------------------
+;; Domino 4: querry effect of activating the ticker - 2
+;;-----------------------------------------------------------
+(rf/reg-sub
+ :progress-bar/ticker-switch
+ (fn [db]
+   (:progress-bar/ticker-switch db)))
+
+;;-----------------------------------------------------------
+;; Domino 4: querry effect of changing the actual value - 2
+;;-----------------------------------------------------------
+(rf/reg-sub
+ :progress-bar/actual-value
+ (fn [db]
+   (:progress-bar/actual-value db)))
+

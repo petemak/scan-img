@@ -5,6 +5,7 @@
             [scan-img.subs :as subs]
             [scan-img.utils :as utils]
             [scan-img.message-panel :as msg]
+            [clojure.string :as st]
             [ajax.core :refer [POST]]))
 
 
@@ -34,7 +35,7 @@
    [:label {:for id} lbl]   
    [:input {:id id
             :type typ
-            :class "form-control"
+            :class (if-not (st/blank? @val) "form-control is-valid" "form-control is-invalid")
             :value @val
             :on-change on-chg
             :required req}]])
@@ -60,12 +61,15 @@
     (println "::==> handle-response-ok: upload nessage " upl-messages)
     (println "::==> handle-response-ok: cmd message" cmd-messages)
     (println "::==> handle-response-ok: results: " (:results cmd-messages))
-    (rf/dispatch [:reset-ticker 100])
-    (rf/dispatch [:upload-status cmd-messages])))
+    (rf/dispatch [:progress-bar/tick 100])
+    (println "::==> handle-response-ok: *100* DISPATCHED!")
+    (rf/dispatch [:upload-status cmd-messages])
+    (rf/dispatch [:progress-bar/stop])
+    (println "::==> handle-response-ok: *STOP* DISPATCHED!")))
 
 ;;-----------------------------------------------------------
 ;; Handle error in messahe
-;;-----------------------------------------------------------
+;;----------------------------------------------------------- 
 (defn handle-response-error
   "Handle a failed uplod"
   [ctx]
@@ -73,11 +77,12 @@
         sts (utils/status "Upload failed!"
                           [(str "HTTP status code: "  (:status ctx))
                            (str "HTTP tatus message: " (:status-text ctx))
-                           (str "Failure type: " (:failure ctx))
+                           (str "Failure type: " (:failure ctx)) 
                            (str "Response message: " (:message rsp))]
                     nil)]
     (println "::-> handle-reponse-error: response " (:response ctx))
-    (println "::-> handle-reponse-error: rsp " rsp)    
+    (println "::-> handle-reponse-error: rsp " rsp)
+    (rf/dispatch [:progress-bar/stop])
     (rf/dispatch [:upload-status sts] )))
 
 
@@ -85,7 +90,8 @@
 ;; Handler for upload-button
 ;;-----------------------------------------------------------
 (defn upload-file [file-id file-type]
-  (rf/dispatch [:submit-clicked])
+  ;;  (rf/dispatch [:submit-file-clicked])
+  (rf/dispatch [:progress-bar/start])
   (let [file-el (.getElementById js/document file-id)
         file-name (.-name file-el)
         file-data (aget (.-files file-el) 0)

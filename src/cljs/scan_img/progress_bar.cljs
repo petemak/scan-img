@@ -12,9 +12,7 @@
 (defn dispatch-tick
   "Dispatch ticking event"
   []
-  (let [switch-on? @(rf/subscribe [:progress-bar/ticker-switch])]
-    (if switch-on?
-      (rf/dispatch [:progress-bar/tick 5]))))
+  (rf/dispatch [:progress-bar/tick 5]))
 
 
 ;;-----------------------------------------------------------
@@ -28,8 +26,8 @@
 ;; Progress bar
 ;;----------------------------------------------------------
 (defn progress-bar []
-  (let [val @(rf/subscribe [:progress-bar/actual-value])
-        
+  
+  (let [val @(rf/subscribe [:progress-bar/actual-value])        
         pval (str val "%")]
     [:div
      [:div {:class "progress"}

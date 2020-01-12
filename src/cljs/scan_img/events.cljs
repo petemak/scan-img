@@ -20,7 +20,9 @@
  (fn [db _]
    (-> db
        (merge db/default-db)
-       (assoc :state (ui-stm/next-state nil :init)))))
+       (assoc :state (ui-stm/next-state nil :init))
+       (assoc :progress-bar/actual-value 0)
+       (assoc :progress-bar/ticker-switch false))))
 
 
 
@@ -53,37 +55,6 @@
          ntick (if (< tick 100) (+ tick 5) 0)
          new-tick  (if (= :SUCCESS (:state db)) 100 ntick)]
      {:db (assoc db :progress-tick ntick)})))
-
-
-;;-----------------------------------------------------------
-;; Domino 2: comupte effect of ticker - 2
-;;-----------------------------------------------------------
-(rf/reg-event-fx
- :progress-bar/tick
- (fn [{:keys [db]} [evt val]]
-   (let [new-tick (+ (:progress-bar/actual-value db) val)]
-     (if (>= new-tick 100)
-       {:db (assoc db :progress-bar/actual-value 100)}
-       {:db (assoc db :progress-bar/actual-value new-tick)}))))
-
-
-;;-----------------------------------------------------------
-;; Domino 2: comupte effect of starting the ticker - 2
-;;-----------------------------------------------------------
-(rf/reg-event-fx
- :progress-bar/start
- (fn [{:keys [db]} [evt val]]
-   {:db (update db :progress-bar/ticker-switch true)
-    :dispatch [:progress-bar/tick 0]}))
-
-;;-----------------------------------------------------------
-;; Domino 2: comupte effect of stopping the ticker - 2
-;;-----------------------------------------------------------
-(rf/reg-event-fx
- :progress-bar/stop
- (fn [{:keys [db]} [evt val]]
-   {:db (update db :progress-bar/ticker-switch false)
-    :dispatch [:progress-bar/tick 100]}))
 
 
 ;;-----------------------------------------------------------
@@ -256,7 +227,7 @@
 (rf/reg-event-fx
  :handle-success
  (fn [{:keys [db]} [evt res]]
-   (println "::--> handle-success: " res)
+;;   (println "::--> handle-success: " res)
 
    (let [m  (-> db
                 (transition-state evt)
@@ -296,8 +267,64 @@
 (rf/reg-event-fx
  :view-type
  (fn [{:keys [db]} [evt val]]
-   (println "::-->  reg-event-fx: db = " db)
+;;   (println "::-->  reg-event-fx: db = " db)
    {:db (assoc db :view-type val)}))
 
 
+;;-----------------------------------------------------------
+;;-----------------------------------------------------------
 
+
+
+;;-----------------------------------------------------------
+;; Domino 2: comupte effect of starting the ticker - 2
+;;-----------------------------------------------------------
+(comment 
+  (rf/reg-event-fx
+   :progress-bar/start
+   (fn [{:keys [db]} [evt val]]
+     (println "::--> Event handler :progressbar/start: " (:progress-bar/actual-value db))   
+     {:db (assoc db :progress-bar/ticker-switch true)
+      :dispatch [:progress-bar/tick 0]})))
+
+(rf/reg-event-fx
+ :progress-bar/start
+ (fn [{:keys [db]} [evt val]]
+   (println "::--> Event handler :progressbar/start: " (:progress-bar/actual-value db))   
+   {:db (-> db
+            (assoc :progress-bar/ticker-switch true)
+            (assoc :progress-bar/actual-value 0))}))
+
+
+;;-----------------------------------------------------------
+;; Domino 2: comupte effect of stopping the ticker - 2
+;;-----------------------------------------------------------
+(comment 
+  (rf/reg-event-fx
+   :progress-bar/stop
+   (fn [{:keys [db]} [evt val]]
+     {:db (assoc db :progress-bar/ticker-switch false)
+      :dispatch [:progress-bar/tick 100]})))
+
+(rf/reg-event-fx
+ :progress-bar/stop
+ 
+ (fn [{:keys [db]} [_ _]]
+   (println "::--> Event handler :progressbar/stop: " (:progress-bar/actual-value db))   
+   {:db (assoc db :progress-bar/tick 100)}))
+
+
+;;-----------------------------------------------------------
+;; Domino 2: comupte effect of ticker - 2
+;;-----------------------------------------------------------
+(rf/reg-event-fx
+ :progress-bar/tick
+ (fn [{:keys [db]} [evt val]]
+   ;;(println "::--> Event handler :progressbar/tick: " (:progress-bar/actual-value db))
+   (if (:progress-bar/ticker-switch db)
+     (let [new-tick (+ (:progress-bar/actual-value db) val)]
+       (cond
+         (<= new-tick 0)   {:db (assoc db :progress-bar/actual-value 0  )}
+         (>= new-tick 100) {:db (assoc db :progress-bar/actual-value 100)}
+         :else             {:db (assoc db :progress-bar/actual-value new-tick)}))
+     {:db db})))
