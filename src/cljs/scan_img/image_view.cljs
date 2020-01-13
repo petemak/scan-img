@@ -135,12 +135,16 @@
 ;;-----------------------------------------------------------
 (defn upload-form
   []
-  (let [val-unm  (rf/subscribe [:user-name])
+  (let [sel-file (rf/subscribe [:file-selected])
+        val-unm  (rf/subscribe [:user-name])
         val-pwd  (rf/subscribe [:password])
+        inp-cplt? (or (st/blank? @sel-file)
+                      (st/blank? @val-unm)
+                      (st/blank? @val-pwd))
         on-chg-unm #(rf/dispatch [:modify-name (-> % .-target .-value)])
         on-chg-pwd #(rf/dispatch [:modify-password (-> % .-target .-value)])]
     
-    (fn []      
+    (fn []
       [:div
        [:form {:id "upload-form"
                :enc-type "multipart/form-data"
@@ -149,7 +153,7 @@
          [:div {:class "custom-file"}
           ;;[:label {:for "file"} "Docker image"]
           [:input {:type "file"
-                   :class "custom-file-input"
+                   :class (if-not (st/blank? sel-file) "custom-file-input is-valid" "custom-file-input is-invalid")
                    :required "true"
                    :name "file"
                    :id "file"
@@ -176,6 +180,7 @@
          
          [:button {:type "button"
                    :class "btn btn-primary float-right"
+                   :disabled (or (st/blank? @sel-file)(st/blank? @val-unm)(st/blank? @val-pwd)) 
                    :on-click #(upload-file "file" "image")} "Start..."]]]])))
 
 

@@ -1,4 +1,5 @@
-(ns scan-img.utils)
+(ns scan-img.utils
+  (:require [clojure.string :as cs]))
 
 
   
@@ -18,3 +19,9 @@
   {:results [{:command cmd
               :message msg
               :outstrlst det}]})
+
+
+(defn not-blank?
+  "Verifies if string is not null and not balnk"
+  [s]
+  (not (cs/blank? s)))

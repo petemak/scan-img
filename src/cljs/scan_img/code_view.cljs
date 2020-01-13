@@ -8,7 +8,9 @@
 
 
 (defn reset-form
+  "Event handler for resetting content"
   []
+  (rf/dispatch [:progress-bar/reset])
   (rf/dispatch [:reset-form]))
 
 
@@ -18,9 +20,8 @@
 (defn submit-clicked
   "Action handler for submitting code, user-name and password"
   []
-  (println "::--> text-input - submitting: ....")
-    ;; (swap! tick-status assoc :tick true)
-  (rf/dispatch [:submit-clicked]))
+  (rf/dispatch [:submit-clicked])
+  (rf/dispatch [:progress-bar/start]))
 
 
 

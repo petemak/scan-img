@@ -75,7 +75,7 @@
  (fn [{:keys [db]} [_ _]]
    {:db  (-> db 
              (dissoc :submission-results)
-             (dissoc :file-selected "")          
+             (dissoc :file-selected)          
              (assoc  :progress-tick 0)
              (assoc :code-text "")
              (assoc :user-name "")
@@ -227,8 +227,7 @@
 (rf/reg-event-fx
  :handle-success
  (fn [{:keys [db]} [evt res]]
-;;   (println "::--> handle-success: " res)
-
+   (rf/dispatch [:progress-bar/stop]) 
    (let [m  (-> db
                 (transition-state evt)
                 (assoc :show-progress-bar false)
@@ -247,7 +246,7 @@
  :handle-error
  (fn [{:keys [db]} [evt res]]
    (println "::-->  handle-error: " res)
-   
+   (rf/dispatch [:progress-bar/stop])     
    (let [m  (-> db
                 (transition-state evt)
                 (assoc :show-progress-bar false)
@@ -267,8 +266,8 @@
 (rf/reg-event-fx
  :view-type
  (fn [{:keys [db]} [evt val]]
-;;   (println "::-->  reg-event-fx: db = " db)
-   {:db (assoc db :view-type val)}))
+   {:db (assoc db :view-type val)
+    :dispatch [:progress-bar/reset]}))
 
 
 ;;-----------------------------------------------------------
@@ -279,18 +278,9 @@
 ;;-----------------------------------------------------------
 ;; Domino 2: comupte effect of starting the ticker - 2
 ;;-----------------------------------------------------------
-(comment 
-  (rf/reg-event-fx
-   :progress-bar/start
-   (fn [{:keys [db]} [evt val]]
-     (println "::--> Event handler :progressbar/start: " (:progress-bar/actual-value db))   
-     {:db (assoc db :progress-bar/ticker-switch true)
-      :dispatch [:progress-bar/tick 0]})))
-
 (rf/reg-event-fx
  :progress-bar/start
  (fn [{:keys [db]} [evt val]]
-   (println "::--> Event handler :progressbar/start: " (:progress-bar/actual-value db))   
    {:db (-> db
             (assoc :progress-bar/ticker-switch true)
             (assoc :progress-bar/actual-value 0))}))
@@ -299,20 +289,23 @@
 ;;-----------------------------------------------------------
 ;; Domino 2: comupte effect of stopping the ticker - 2
 ;;-----------------------------------------------------------
-(comment 
-  (rf/reg-event-fx
-   :progress-bar/stop
-   (fn [{:keys [db]} [evt val]]
-     {:db (assoc db :progress-bar/ticker-switch false)
-      :dispatch [:progress-bar/tick 100]})))
-
 (rf/reg-event-fx
  :progress-bar/stop
- 
  (fn [{:keys [db]} [_ _]]
-   (println "::--> Event handler :progressbar/stop: " (:progress-bar/actual-value db))   
    {:db (assoc db :progress-bar/tick 100)}))
 
+
+;;-----------------------------------------------------------
+;; Domino 2: comupte effect of resetting the ticker - 2
+;;-----------------------------------------------------------
+(rf/reg-event-fx
+   :progress-bar/reset
+   (fn [{:keys [db]} [evt val]]
+     (println "::--> Event handler :progressbar/reset: " (:progress-bar/actual-value db))
+     
+     {:db (-> db
+              (assoc :progress-bar/actual-value 0)
+              (assoc :progress-bar/ticker-switch false))}))
 
 ;;-----------------------------------------------------------
 ;; Domino 2: comupte effect of ticker - 2
@@ -320,7 +313,6 @@
 (rf/reg-event-fx
  :progress-bar/tick
  (fn [{:keys [db]} [evt val]]
-   ;;(println "::--> Event handler :progressbar/tick: " (:progress-bar/actual-value db))
    (if (:progress-bar/ticker-switch db)
      (let [new-tick (+ (:progress-bar/actual-value db) val)]
        (cond
