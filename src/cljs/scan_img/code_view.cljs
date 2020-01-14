@@ -20,6 +20,8 @@
 (defn submit-clicked
   "Action handler for submitting code, user-name and password"
   []
+  (let [sts (utils/status-message "Submitting Dockerfile for processing: " "please wait!" nil)]
+    (rf/dispatch [:upload-status sts]))
   (rf/dispatch [:submit-clicked])
   (rf/dispatch [:progress-bar/start]))
 
@@ -59,7 +61,7 @@
        [:form {:id "text-field" :class "was-validated" :on-submit (fn [e]
                                                                     (.preventDefault e))}
         [:div {:class "form-group"}
-         [:label {:for :code-txt-field} "Paste Docker file"]
+         [:label {:for :code-txt-field} "Paste Dockerfile here:"]
          [:textarea {:id :code-txt-field
                      :name :code-txt-field
                      :class "form-control"
@@ -70,8 +72,8 @@
          
          [:div {:class "invalid-feedback"} "Ensure you enter valid Docker code that generates ephemeral containers"]]
         [:div {:class "row"}
-         [input-field :user-name :user-name nil         "User Name" val-unm on-chg-unm true]
-         [input-field :password  :password  "password"  "Password"  val-pwd on-chg-pwd true]]
+         [input-field :user-name :user-name nil         "User Name:" val-unm on-chg-unm true]
+         [input-field :password  :password  "password"  "Password:"  val-pwd on-chg-pwd true]]
         
         [:hr]
         [:div {:class "form-group"}

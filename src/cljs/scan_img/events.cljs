@@ -227,13 +227,12 @@
 (rf/reg-event-fx
  :handle-success
  (fn [{:keys [db]} [evt res]]
-   (rf/dispatch [:progress-bar/stop]) 
    (let [m  (-> db
                 (transition-state evt)
                 (assoc :show-progress-bar false)
                 (assoc :submission-results res))]
      {:db m
-      :dispatch [:upload-status res]})))
+      :dispatch-n (list [:upload-status res] [:progress-bar/tick 100])})))
 
 
 
@@ -292,7 +291,7 @@
 (rf/reg-event-fx
  :progress-bar/stop
  (fn [{:keys [db]} [_ _]]
-   {:db (assoc db :progress-bar/tick 100)}))
+   {:db (assoc db :progress-bar/actual-value 100)}))
 
 
 ;;-----------------------------------------------------------
@@ -301,8 +300,6 @@
 (rf/reg-event-fx
    :progress-bar/reset
    (fn [{:keys [db]} [evt val]]
-     (println "::--> Event handler :progressbar/reset: " (:progress-bar/actual-value db))
-     
      {:db (-> db
               (assoc :progress-bar/actual-value 0)
               (assoc :progress-bar/ticker-switch false))}))

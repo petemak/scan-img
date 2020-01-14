@@ -88,6 +88,8 @@
 
 ;;-----------------------------------------------------------
 ;; Handler for upload-button
+;;
+;; POSTs to the selected image to the /upload/scan URL 
 ;;-----------------------------------------------------------
 (defn upload-file [file-id file-type]
   ;;  (rf/dispatch [:submit-file-clicked])
@@ -106,12 +108,9 @@
                     (.append :password password))
 
         
-        sts (utils/status-message (str  "Uploading file '" file-name "'") "Upload started..." nil)]
+        sts (utils/status-message (str  "Uploading docker image  '" file-name "' for processing") "Please wait!" nil)]
     
-    
-    (println "::--> image-view/upload-file: sts = " sts )
-    (println "::--> image-view/upload-file: password = " password)
-
+  
     (when (some? file-data)
       (POST "/upload/scan" {:body form-data
                             ;; :response-format :json
@@ -119,10 +118,7 @@
                             :handler handle-response-ok
                             :error-handler handle-response-error})
 
-      (rf/dispatch [:upload-status sts])
-      
-      #_(swap! tick-status assoc :tick true)
-      )))
+      (rf/dispatch [:upload-status sts]))))
 
 
 (defn reset-form
@@ -169,8 +165,8 @@
 
         [:br]
         [:div {:class "row"}
-         [input-field "user-name" :user-name nil         "User Name" val-unm on-chg-unm true]
-         [input-field "password"  :password  "password"  "Password"  val-pwd on-chg-pwd true]] 
+         [input-field "user-name" :user-name nil         "User Name:" val-unm on-chg-unm true]
+         [input-field "password"  :password  "password"  "Password:"  val-pwd on-chg-pwd true]] 
 
         [:hr]
         [:div {:class "form-group"}
