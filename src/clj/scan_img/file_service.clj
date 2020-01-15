@@ -23,16 +23,18 @@
 (defn save-file!
   "Save file to resources/public/uploads. "
   [data]
-  (timbre/info "::--> save-file!: name of data to save " (:file-me data) "... ")
+  (timbre/info "::--> save-file!: name of data to save " (:file-name data) "... ")
   (timbre/info "::--> save-file!: type of data to save " (:file-type data) "... ")  
   (let [unique-name (utils/unique-str (:file-name data))
-        target (io/file "resources" "public" "uploads" unique-name)
-        can-path (utils/ensure-parent-dir! target)
-        docker-txt? (= :docker-text (:file-type data))]
+        target      (io/file "resources" "public" "uploads" unique-name)
+        can-path    (utils/ensure-parent-dir! target)
+        docker-txt? (= :docker-text (:file-type data))
+        ret {:cannonical-path can-path
+             :image-name unique-name}]
     (if docker-txt?
       (spit target  (:file-data data))
       (io/copy (:file-data data) target))
-    can-path))
+    ret))
 
 
 
@@ -97,7 +99,9 @@
                :message ...
                outstrlst ...}  ]}"
   [data]
-  (timbre/info "::-> run-commands! - cannonical path: " (:cannonical-path data))
+  (timbre/info "::--> file-service/run-commands! - file name: " (:file-name data))
+  (timbre/info "::--> file-service/run-commands! - cannonical path: " (:cannonical-path data))
+  ;; (timbre/info "::--> file-service/run-commands! - input data: " data)
   (if-let [config (resolve-command-config! data)]
     (let [commands (process-command-params (:executable-cmd config) data)]
       (timbre/info "::==> run-commands! - commands processed for execution: " (str commands))
@@ -138,9 +142,9 @@
   (async/go-loop [data (async/<! in)]
     (timbre/info "::-> start-processor - data from queue: " data)
     (when data
-      (when-let [path (save-file! data)]
-        (let [cmd-output (run-commands! (assoc data :cannonical-path path))
-              results (assoc cmd-output :cannonical-path path)]
+      (when-let [ret-map (save-file! data)]
+        (let [cmd-output (run-commands! (merge data ret-map))
+              results (merge cmd-output ret-map)]
           (async/>! out results)))
       (recur (async/<! in)))))
 
@@ -219,9 +223,9 @@
               :user-name user-name
               :password password}]
 
-    (when-let [path (save-file! data)]
-      (let [cmd-output (run-commands! (assoc data :cannonical-path path))]
-        (assoc cmd-output :cannonical-path path) ))) )
+    (when-let [ret-map (save-file! data)]
+      (let [cmd-output (run-commands! (merge data ret-map))]
+        (merge cmd-output ret-map) ))) )
 
 
 
@@ -258,7 +262,7 @@
               :file-type :docker-text
               :user-name user-name
               :user-password password}]    
-    (when-let [path (save-file! data)]
-      (let [cmd-output (run-commands! (assoc data :cannonical-path path))]
-        (assoc cmd-output :cannonical-path path) ))))
+    (when-let [ret-map (save-file! data)]
+      (let [cmd-output (run-commands! (merge data ret-map))]
+        (merge cmd-output ret-map) ))))
 
