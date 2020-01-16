@@ -1,6 +1,8 @@
 (ns scan-img.message-panel
   (:require [re-frame.core :as rf]
             [chord.client :refer [ws-ch]]
+            [clojure.string :as str]
+            [scan-img.utils :as utils]
             [cljs.core.async :refer [<! >! put! close!]]))
 
 
@@ -34,23 +36,26 @@
 ;; Run commands. 
 ;; side effects!!!
 ;;--------------------------------------------------------------
-" The return map contains a list of maps mapped to the key :results
+(defn message-view
+ " The return map contains a list of maps mapped to the key :results
   Each map in the list contains the executed command and results
   {:results [ {:command \"bla bla\"
                :message \"Message...\"
                :outstrlst \"exception...\"}
               {:command ...
                :message ...
-               outstrlst ...}  ]}"
-(defn message-view
+               outstrlst ...}  ]}"  
   [msg]
   (println "::--> message-view message: " msg)
-  (println "::--> type msg: " (type msg))
-  [:div {:class "alert alert-info alert-dismissible fade show"}
+  ;;(println "::--> type msg: " (:type msg))
+  [:div {:class "alert alert-info alert-dismissible fade show"
+         :key (utils/unique-key nil)}
    [:button {:type "button" :class "close" :data-dismiss "alert"} "x"] 
    [:h5 {:class "alert-heading"} "Command: " (:command msg)]
    [:br]
-   [:p "Results: " (:message msg)]
+   [:p "Results: "
+    (when (:message msg)
+       (outstr->str (:message msg)))]
 
    (when (:outstrlst msg) 
      [:hr]

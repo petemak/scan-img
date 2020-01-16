@@ -38,6 +38,20 @@
   [s]
   (str (uid-str!) "-" s))
 
+
+;;--------------------------------------------------------------
+;; Resolve parent directory of specified directory path string
+;; side effects!!!
+;;--------------------------------------------------------------
+(defn parent-dir
+  "Return the parent directory from the given path string
+
+  in: C:\\SRDEV\\learn\\clj\\scan-img\\resources\\public\\xyz.txt
+  out: C:\\SRDEV\\learn\\clj\\scan-img\\resources\\public"
+  [pathstr]
+  (if-let [f (io/as-file pathstr)]
+    (.getParent f)))
+
 ;;--------------------------------------------------------------
 ;; Ensuring upload storage directory exists.
 ;; side effects!!!

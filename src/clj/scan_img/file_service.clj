@@ -26,16 +26,17 @@
   (timbre/info "::--> save-file!: name of data to save " (:file-name data) "... ")
   (timbre/info "::--> save-file!: type of data to save " (:file-type data) "... ")  
   (let [unique-name (utils/unique-str (:file-name data))
-        target      (io/file "resources" "public" "uploads" unique-name)
-        can-path    (utils/ensure-parent-dir! target)
         docker-txt? (= :docker-text (:file-type data))
-        ret {:cannonical-path can-path
-             :image-name unique-name}]
+        file-name   (if docker-txt? "dockerfile" unique-name) 
+        target      (io/file "resources" "public" "uploads" unique-name file-name)
+        can-path    (utils/ensure-parent-dir! target)
+        ret         {:cannonical-path can-path
+                     :context-directory (utils/parent-dir can-path)
+                     :file-name file-name}]
     (if docker-txt?
       (spit target  (:file-data data))
       (io/copy (:file-data data) target))
     ret))
-
 
 
 

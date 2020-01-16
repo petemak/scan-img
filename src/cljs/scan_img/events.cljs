@@ -244,17 +244,20 @@
 (rf/reg-event-fx
  :handle-error
  (fn [{:keys [db]} [evt res]]
-   (println "::-->  handle-error: " res)
+   (println "::-->  events/handle-error: " res)
+   (println "::-->  events/last-error: " (:last-error res))
+    (println "::-->  events/debug-message: " (:debug-message res))
    (rf/dispatch [:progress-bar/stop])     
    (let [m  (-> db
                 (transition-state evt)
                 (assoc :show-progress-bar false)
                 (assoc :submission-results res))
-         msg (utils/status (str "Submit failed with error message -> " (:last-error res) " <-")
-                           [(str "Status: " (:status res))
-                            (str "Status text: " (:status-text res))
-                            (str "Debug message: " (:debug-message res))] nil)]
-
+         msg (utils/status-message (str "Submit failed with error message -> " (:last-error res) " <-")
+                                    [(str "Failure: " (:failure res))
+                                     (str "Status text: " (:status-text res))
+                                     (str "Debug message: " (:debug-message res)) ] nil)]
+     
+    (println "::-->  events/dispatching msg: " msg)
      {:db m
       :dispatch [:upload-status msg]})))
 

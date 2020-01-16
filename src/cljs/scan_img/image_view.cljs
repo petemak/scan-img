@@ -62,10 +62,8 @@
     (println "::==> handle-response-ok: cmd message" cmd-messages)
     (println "::==> handle-response-ok: results: " (:results cmd-messages))
     (rf/dispatch [:progress-bar/tick 100])
-    (println "::==> handle-response-ok: *100* DISPATCHED!")
     (rf/dispatch [:upload-status cmd-messages])
-    (rf/dispatch [:progress-bar/stop])
-    (println "::==> handle-response-ok: *STOP* DISPATCHED!")))
+    (rf/dispatch [:progress-bar/stop])))
 
 ;;-----------------------------------------------------------
 ;; Handle error in messahe
