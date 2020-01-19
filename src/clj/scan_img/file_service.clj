@@ -23,8 +23,7 @@
 (defn save-file!
   "Save file to resources/public/uploads. "
   [data]
-  (timbre/info "::--> save-file!: name of data to save " (:file-name data) "... ")
-  (timbre/info "::--> save-file!: type of data to save " (:file-type data) "... ")  
+  (timbre/info "::==> file-service/save-file!: name of data to save " (:file-name data) "... ")
   (let [unique-name (utils/unique-str (:file-name data))
         docker-txt? (= :docker-text (:file-type data))
         file-name   (if docker-txt? "dockerfile" unique-name) 
@@ -105,8 +104,8 @@
   ;; (timbre/info "::--> file-service/run-commands! - input data: " data)
   (if-let [config (resolve-command-config! data)]
     (let [commands (process-command-params (:executable-cmd config) data)]
-      (timbre/info "::==> run-commands! - commands processed for execution: " (str commands))
-      (timbre/info "::==> rund-command! with config found: " config)
+      (timbre/info "::==> file-service/run-commands! - commands processed for execution: " (pr-str commands))
+      (timbre/info "::==> file-service/rund-command! with config found: " config)
 
       (try 
         (loop [cmds commands
@@ -116,13 +115,13 @@
             (do
               (let [cmd (first cmds)
                     result @(exec/sh cmd {:shutdown true})]
-                (timbre/info "::==> run-command! executed --[" cmd "]--")
+                (timbre/info "::==> file-service/run-command! executed command --[" (pr-str cmd) "]--")
                 ;;(timbre/info "::==> run-command! results --[ " result "... ]--")
                 (recur (rest cmds) (utils/execresult->strlist cmd  result accum))))))
         (catch Exception e          
           (utils/cmd-error-msg data commands  {:results []}))))
     (do
-      (timbre/info "::-> run-commands! - Command execution failed. Commands not found!")
+      (timbre/info "::==> file-service/run-commands! - Command execution failed. Commands not found!")
       (utils/cmd-error-msg data nil {:results []}))))
 
 
@@ -141,7 +140,7 @@
   returns a map of input and output channels"
   [in out]
   (async/go-loop [data (async/<! in)]
-    (timbre/info "::-> start-processor - data from queue: " data)
+    (timbre/info "::==> file-service/start-processor - data from queue: " data)
     (when data
       (when-let [ret-map (save-file! data)]
         (let [cmd-output (run-commands! (merge data ret-map))

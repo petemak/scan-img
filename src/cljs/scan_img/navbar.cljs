@@ -6,10 +6,11 @@
 (def nav-state (atom {:view-type :upload-docker-file}))
 
 ;; View types
-(def view-types [:upload-docker-file :upload-docker-image])
+(def view-types [:upload-docker-file :upload-docker-image :edit-config])
 
-(def view-txt {:upload-docker-file ">>"
-               :upload-docker-image "<<"})
+(def view-txt {:upload-docker-file "f"
+               :upload-docker-image "i"
+               :edit-config "c"})
 
 ;;-----------------------------------------------------
 ;; Toggle view type

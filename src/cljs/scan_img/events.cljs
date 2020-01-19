@@ -209,7 +209,7 @@
      {:db (transition-state db event)
       :http-xhrio {:method :post
                    :uri "/upload/code"
-                   :timeout 10000
+                   :timeout 60000
                    :params payload       ;; :params requires :format
                    :format (ajxedn/edn-request-format)
                    :response-format (ajxedn/edn-response-format)
@@ -246,16 +246,17 @@
  (fn [{:keys [db]} [evt res]]
    (println "::-->  events/handle-error: " res)
    (println "::-->  events/last-error: " (:last-error res))
-    (println "::-->  events/debug-message: " (:debug-message res))
+   (println "::-->  events/debug-message: " (:debug-message res))
    (rf/dispatch [:progress-bar/stop])     
    (let [m  (-> db
                 (transition-state evt)
                 (assoc :show-progress-bar false)
                 (assoc :submission-results res))
          msg (utils/status-message (str "Submit failed with error message -> " (:last-error res) " <-")
-                                    [(str "Failure: " (:failure res))
-                                     (str "Status text: " (:status-text res))
-                                     (str "Debug message: " (:debug-message res)) ] nil)]
+                                   [(str "Failure: " (:failure res))
+                                    (str "Status code: " (:status res))
+                                    (str "Status text: " (:status-text res))
+                                    (str "Debug message: " (:debug-message res)) ] nil)]
      
     (println "::-->  events/dispatching msg: " msg)
      {:db m
@@ -319,4 +320,17 @@
          (<= new-tick 0)   {:db (assoc db :progress-bar/actual-value 0  )}
          (>= new-tick 100) {:db (assoc db :progress-bar/actual-value 100)}
          :else             {:db (assoc db :progress-bar/actual-value new-tick)}))
+     {:db db})))
+
+
+
+;;-----------------------------------------------------------
+;; Domino 2: comupte status of clicking submit on the confedit
+;; screen
+;; 
+;;-----------------------------------------------------------
+(rf/reg-event-fx
+ :save-config-clicked
+ (fn [{:keys [db]} [_ _]]
+   (let []
      {:db db})))

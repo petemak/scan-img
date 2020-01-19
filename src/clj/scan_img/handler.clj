@@ -72,6 +72,24 @@
           (assoc :path (:cannonical-path results))
           (ok-resp)))))
 
+;;--------------------------------------------------------------
+;; Process an config file upload
+;; side effects
+;;--------------------------------------------------------------
+(defn process-config
+  "Handler processes config file uploads
+   First saves"
+  [params]
+  (let [code (:config params)]
+    (timbre/info "::--> handler/process-config - params: " params)
+    
+    (let [results {:results  {:message "Config file saved"
+                              :command "Save config.edn"}}]
+      (timbre/info "::--> handler/process-config - results from file service: " results)
+      (-> results
+          (assoc :message "Processing done")
+          (assoc :path (:cannonical-path results))
+          (ok-resp)))))
 
 ;;--------------------------------------------------------------
 ;; Progress functions for multipart warapper. Called during uploads.
@@ -80,10 +98,10 @@
   "Progress function inoked by multi-part upload wrapper
    Could this be used to send SSE events to client?"
   [request bytes-read content-length item-count]
-  (timbre/info "::> request " request)
-  (timbre/info "::> content lenght " content-length)
-  (timbre/info "::> item count " item-count)
-  (timbre/info "::> bytes read " bytes-read))
+  (timbre/info "::==> handler/progress-fn request " request)
+  (timbre/info "::==> handler/progress-fn content lenght " content-length)
+  (timbre/info "::==> handler/progress-fn item count " item-count)
+  (timbre/info "::==> handler/progress-fn bytes read " bytes-read))
 
 
 ;;--------------------------------------------------------------
@@ -103,8 +121,12 @@
 ;;--------------------------------------------------------------
 (defroutes upload-routes
   (POST "/upload/scan" request (process-file request))
-  (POST "/upload/code" {params :params} (process-code params)))
+  (POST "/upload/code" {params :params} (process-code params))
+  (POST "/upload/config" {params :params} (process-config params)))
 
+;;--------------------------------------------------------------
+;; Appliction routes combining site nd upload routes
+;;--------------------------------------------------------------
 (def wrapped-upload-routes
   (-> upload-routes
       (wrap-edn-params)

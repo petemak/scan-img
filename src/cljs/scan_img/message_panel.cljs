@@ -7,21 +7,49 @@
 
 
 
+;;--------------------------------------------------------------
+;; Utility: creates a UL from a string list
+;;--------------------------------------------------------------
 (defn list-to-ul
   "Create a UL from a list"
   [strlst]
   [:ul {:class "list-unstyled"}
     (for [st strlst]
-      [:li {:id (subs st 0 5)} st])]  )
+      [:li {:id (subs st 0 5)} st])])
 
+
+;;--------------------------------------------------------------
+;; Utility: creates a string from a string list
+;;--------------------------------------------------------------
+(defn list-to-str
+  "Create a UL from a list"
+  [lst]
+  (apply str (interpose " " lst)))
+
+
+;;--------------------------------------------------------------
+;; Utility: created a UL frpm a map 
+;;--------------------------------------------------------------
 (defn map-to-ul
   "Create a UL from a map"
   [strlst]
   [:ul {:class "list-unstyled"}
     (for [st (vals strlst)]
-      [:li {:id (subs st 0 5)} st])]  )
+      [:li {:id (subs st 0 5)} st])])
+
+;;--------------------------------------------------------------
+;; Utility: creates a string from a string list
+;;--------------------------------------------------------------
+(defn map-to-str
+  "Create a UL from a list"
+  [mp]
+  (pr-str mp))
 
 
+
+;;--------------------------------------------------------------
+;; Utility: create UL from collection types
+;;--------------------------------------------------------------
 (defn outstr->str
   "Create a string from the specified value"
   [outstr]
@@ -30,6 +58,20 @@
     (instance? cljs.core/List outstr) (list-to-ul outstr)
     (instance? cljs.core/PersistentArrayMap outstr) (map-to-ul outstr)
     :else [:p outstr]))
+
+
+;;--------------------------------------------------------------
+;; Utility: create UL from collection types
+;;--------------------------------------------------------------
+(defn list->str
+  "Create a string from the specified value"
+  [lst]
+  (cond
+    (instance? cljs.core/PersistentVector lst) (list-to-str lst)
+    (instance? cljs.core/List lst) (list-to-str lst)
+    (instance? cljs.core/PersistentArrayMap lst) (map-to-str lst)
+    :else lst))
+
 
 
 ;;--------------------------------------------------------------
@@ -46,12 +88,13 @@
                :message ...
                outstrlst ...}  ]}"  
   [msg]
-  (println "::--> message-view message: " msg)
-  ;;(println "::--> type msg: " (:type msg))
+  (println "::==> message-panel/message-view message: " msg)
+  (println "::==> message-panel/type msg: " (type msg))
+  (println "::==> message-panel/type command: " (type (:command msg)))
   [:div {:class "alert alert-info alert-dismissible fade show"
          :key (utils/unique-key nil)}
    [:button {:type "button" :class "close" :data-dismiss "alert"} "x"] 
-   [:h5 {:class "alert-heading"} "Command: " (:command msg)]
+   [:h5 {:class "alert-heading"} "Command: " (list->str (:command msg))]
    [:br]
    [:p "Results: "
     (when (:message msg)
@@ -67,13 +110,13 @@
    and creates panels"
   []
   (let [messages @(rf/subscribe [:upload-status])]
-      ;; either there is a a list of message maps or a single map with a :results key pointing to
-      ;; a list of maps:
-      ;;
-      ;; cmd-messages is a map with a list mapped to the key
-      ;; {:results [{:command "...."
-      ;;             :message "..."
-      ;;             :outstrlst "..."}]}
+    ;; either there is a a list of message maps or a single map with a :results key pointing to
+    ;; a list of maps:
+    ;;
+    ;; cmd-messages is a map with a list mapped to the key
+    ;; {:results [{:command "...."
+    ;;             :message "..."
+    ;;             :outstrlst "..."}]}
     ;;
     (fn [])
       (if (some? (:results messages))
