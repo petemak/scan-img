@@ -58,9 +58,10 @@
 ;;-------------------------------------------------------------
 (defn save-edn-config
   [data]
-  (let [dest (str (home-dir) "config.edn")]
+  (let [src  (io/file data)
+        dest (str (home-dir) "config.edn")]
     (backup-edn-config)
-    (spit dest data)
+    (io/copy src dest)
     dest))
 
 ;;--------------------------------------------------------------

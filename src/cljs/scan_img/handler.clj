@@ -80,10 +80,11 @@
   "Handler processes config file uploads
    First saves"
   [params]
-  (let [config (get params "config")]
+  (let [code (:config params)]
     (timbre/info "::--> handler/process-config - params: " params)
     
-    (let [results (fp/sync-save-config config)]
+    (let [results {:results  [{:command ["save" "config.edn"]
+                               :message "Config file saved"}]}]
       (timbre/info "::--> handler/process-config - results from file service: " results)
       (-> results
           (assoc :message "Processing done")

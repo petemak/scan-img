@@ -34,8 +34,7 @@
 
   (println "::==> confedit/handle-reponse-ok: rsp: " resp)
   
-  (let [rsp (cr/read-string resp)
-        results (:results rsp)]
+  (let [results (cr/read-string resp)]
     ;; cmd-messages is a map with a list mapped to the key
     ;; {:results [{:command "...."
     ;;             :message "..."
@@ -75,7 +74,7 @@
   (let [config-text (.-textContent (.getElementById js/document element-id))
         form-data (doto
                     (js/FormData.)
-                    (.append :config config-text)
+                    (.append "config" config-text)
                     (.append "upload-type" file-type))
         sts (utils/status-message (str  "Saving configuration  '" config-text "'") "Please wait!" nil)]
     

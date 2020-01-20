@@ -271,10 +271,8 @@
 
 
 (defn sync-save-config
-  "Save configuration provided as text"
   [config]
   (let[ret (utils/save-edn-config config)
        results {:results  [{:command ["save" "config.edn"]
                             :message "Config file saved"}
-                            :outstrlst ret]}]
-    results))
+                            :outstrlst ret]}]))

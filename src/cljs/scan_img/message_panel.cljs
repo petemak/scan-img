@@ -119,6 +119,7 @@
     ;;             :outstrlst "..."}]}
     ;;
     (fn [])
+      (println "::==> message-panel/messages-view message: " messages)    
       (if (some? (:results messages))
         [:div 
          (map message-view (:results messages))])))
