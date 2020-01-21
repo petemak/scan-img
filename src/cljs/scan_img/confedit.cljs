@@ -94,25 +94,27 @@
 ;;-----------------------------------------------
 (defn editor
   []
-  [:div
-   [:div {:class "paren-soup" :id "paren-soup"}
-    [:div {:class "instarepl" :id "instarepl"}]
-    [:div {:class "numbers" :id "numbers"}]
-    [:div {:class "content" :id "content" :contenteditable "true" }
-     ;; Add code here
-     {:name "Docker Image Scanner"
-      :port 3000
-      :mode :dev
-      :executable-cmd [["docker" "build" "-f" "{{cannonical-path}}" "-t {{file-name:1.0}}"]
-                       ["docker" "run" "--user {{user-name}}" "--password {{user-password}}" "{{image-name}}"]]}]]
-   
-   [:hr]
-    [:div {:class "form-group"}
-     [:button {:type "reset"
-               :class "btn btn-danger float-left"
-               :on-click #(reset-form)} "Clear"]
-         
-     [:button {:type :submit
-               :class "btn btn-primary float-right"
-               ;; :disabled @(rf/subscribe [:submit-disabled?])
-               :on-click #(save-config-clicked "content" "config-file")} "Save"]]   ])
+  (fn []
+    (let [view-type @(rf/subscribe [:config/file-data])]
+      [:div
+       [:div {:class "paren-soup" :id "paren-soup"}
+        [:div {:class "instarepl" :id "instarepl"}]
+        [:div {:class "numbers" :id "numbers"}]
+        [:div {:class "content" :id "content" :contenteditable "true" }
+         ;; Add code here
+         {:name "Docker Image Scanner"
+          :port 3000
+          :mode :dev
+          :executable-cmd [["docker" "build" "-f" "{{cannonical-path}}" "-t {{file-name:1.0}}"]
+                           ["docker" "run" "--user {{user-name}}" "--password {{user-password}}" "{{image-name}}"]]}]]
+       
+       [:hr]
+       [:div {:class "form-group"}
+        [:button {:type "reset"
+                  :class "btn btn-danger float-left"
+                  :on-click #(reset-form)} "Clear"]
+        
+        [:button {:type :submit
+                  :class "btn btn-primary float-right"
+                  ;; :disabled @(rf/subscribe [:submit-disabled?])
+                  :on-click #(save-config-clicked "content" "config-file")} "Save"]]   ])))

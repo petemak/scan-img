@@ -251,6 +251,10 @@
                  (queue-event descr))))
 
 
+;;--------------------------------------------------------------
+;; Kick off code processing as soon as ring handler has recieved
+;; code upload
+;;--------------------------------------------------------------
 (defn sync-reg-code-event
   "Register a code upload event o the channel to signal that
   a code  was uploaded. Argumets are the file source, file name and type.
@@ -269,12 +273,26 @@
 
 
 
-
+;;--------------------------------------------------------------
+;; Save configuration file 
+;;--------------------------------------------------------------
 (defn sync-save-config
   "Save configuration provided as text"
   [config]
-  (let[ret (utils/save-edn-config config)
+  (let[ret (utils/save-config config)
        results {:results  [{:command ["save" "config.edn"]
-                            :message "Config file saved"}
-                            :outstrlst ret]}]
+                            :message "Config file saved"
+                            :outstrlst [ret]}]}]
+    results))
+
+
+;;--------------------------------------------------------------
+;; Read configuration file 
+;;--------------------------------------------------------------
+(defn sync-read-config
+  []
+  (let[ret (utils/read-config)
+       results {:results  [{:command ["Read" "config.edn"]
+                            :message "Config file loaded"
+                            :config ret}]}]
     results))

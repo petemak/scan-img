@@ -264,32 +264,6 @@
 
 
 ;;-----------------------------------------------------------
-;; Domino 2: switch ui clicked
-;;-----------------------------------------------------------
-(rf/reg-event-fx
- :view-type
- (fn [{:keys [db]} [evt val]]
-   {:db (assoc db :view-type val)
-    :dispatch [:progress-bar/reset]}))
-
-
-;;-----------------------------------------------------------
-;;-----------------------------------------------------------
-
-
-
-;;-----------------------------------------------------------
-;; Domino 2: comupte effect of starting the ticker - 2
-;;-----------------------------------------------------------
-(rf/reg-event-fx
- :progress-bar/start
- (fn [{:keys [db]} [evt val]]
-   {:db (-> db
-            (assoc :progress-bar/ticker-switch true)
-            (assoc :progress-bar/actual-value 0))}))
-
-
-;;-----------------------------------------------------------
 ;; Domino 2: comupte effect of stopping the ticker - 2
 ;;-----------------------------------------------------------
 (rf/reg-event-fx
@@ -325,12 +299,86 @@
 
 
 ;;-----------------------------------------------------------
+;; Domino 2: switch ui clicked
+;;-----------------------------------------------------------
+(rf/reg-event-fx
+ :view-type
+ (fn [{:keys [db]} [evt val]]
+   (if (= val :edit-config)
+     {:db (assoc db :view-type val)
+      :dispatch-n [:config-view/load-config :progress-bar/reset]}
+     {:db (assoc db :view-type val)
+      :dispatch [:progress-bar/reset]})))
+
+
+
+
+
+;;-----------------------------------------------------------
+;; Domino 2: comupte effect of starting the ticker - 2
+;;-----------------------------------------------------------
+(rf/reg-event-fx
+ :config-view/load-config
+ (fn [{:keys [db]} [evt val]]
+   {:db db
+    :http-xhrio {:method :get
+                 :uri "/upload/config"
+                 :timeout 60000
+                 ;;:params val ;; :params requires :format
+                 :format (ajxedn/edn-request-format)
+                 :response-format (ajxedn/edn-response-format)
+                 :on-success [:handle-config-success]
+                 :on-failure [:handle-config-error]}}))
+
+
+
+;;-----------------------------------------------------------
+;; Domino 2: comupte effect of receiving a successful
+;; :http-xhrio for :successful-code-req
+;;
+;;-----------------------------------------------------------
+(rf/reg-event-fx
+ :handle-config-success
+ (fn [{:keys [db]} [evt res]]
+   (let [m  (-> db
+                (transition-state evt)
+                (assoc :show-progress-bar false)
+                (assoc :config-view/config res))]
+     {:db m
+      :dispatch-n (list [:upload-status res] [:progress-bar/tick 100])})))
+
+
+
+;;-----------------------------------------------------------
+;; Domino 2: comupte effect of receiving a failed
+;; :http-xhrio for :failed-code-req
+;;
+;;-----------------------------------------------------------
+(rf/reg-event-fx
+ :handle-config-error
+ (fn [{:keys [db]} [evt res]]
+   (rf/dispatch [:progress-bar/stop])     
+   (let [m  (-> db
+                (assoc :show-progress-bar false)
+                (assoc :submission-results res))
+         msg (utils/status-message (str "Load config failed  with error message -> " (:last-error res) " <-")
+                                   [(str "Failure: " (:failure res))
+                                    (str "Status code: " (:status res))
+                                    (str "Status text: " (:status-text res))
+                                    (str "Debug message: " (:debug-message res)) ] nil)]
+     
+     {:db m
+      :dispatch [:upload-status msg]})))
+
+
+
+;;-----------------------------------------------------------
 ;; Domino 2: comupte status of clicking submit on the confedit
 ;; screen
 ;; 
 ;;-----------------------------------------------------------
 (rf/reg-event-fx
- :save-config-clicked
+ :config-view/save-config
  (fn [{:keys [db]} [_ _]]
    (let []
      {:db db})))

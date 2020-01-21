@@ -31,3 +31,10 @@
 (deftest code-upload
   (testing "edn"
     (is (not= nil (handler/handler code-req) ))))
+
+
+
+;;
+(deftest read-config
+  (testing "That config file is loaded"
+    (is (not= nil (handler/read-config (mock/request :get "/get/config"))))))

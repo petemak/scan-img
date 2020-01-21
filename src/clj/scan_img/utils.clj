@@ -40,28 +40,17 @@
 
 ;;--------------------------------------------------------------
 ;; Save config.edn in home directory
+;; Returns true if config.edn is indeed renames, nil otherwise
 ;;--------------------------------------------------------------
 (defn backup-edn-config
   "Create a copy and then delete"
   []
-  (let [src (str (home-dir) "config.edn")
-        dest (str (home-dir) "config-" (timestamp) ".edn")]
-
-    (if (.exists (io/file src))
-      (do
-        (io/copy (io/file src ) (io/file dest))
-        (safe-delete src)))))
-
-
-;;--------------------------------------------------------------
-;; Given a text, take a string of given size
-;;-------------------------------------------------------------
-(defn save-edn-config
-  [data]
-  (let [dest (str (home-dir) "config.edn")]
-    (backup-edn-config)
-    (spit dest data)
-    dest))
+  (let [srcstr (str (home-dir) "config.edn")
+        dststr (str (home-dir) "config-" (timestamp) ".edn")
+        sf (io/file srcstr )
+        df (io/file dststr)]
+    (if (.exists sf)        
+        (.renameTo sf df))))
 
 ;;--------------------------------------------------------------
 ;; Given a text, take a string of given size
@@ -191,6 +180,19 @@
   (if-let [cfg (edn-from-resource-path "config.edn")]
     cfg
     (edn-from-home)))
+
+
+
+;;--------------------------------------------------------------
+;; Given a text, take a string of given size
+;;-------------------------------------------------------------
+(defn save-config
+  [data]
+  (let [dest (str (home-dir) "config.edn")]
+    (backup-edn-config)
+    (spit dest data)
+    dest))
+
 
 
 ;;--------------------------------------------------------------

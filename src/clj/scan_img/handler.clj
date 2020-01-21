@@ -73,6 +73,21 @@
           (ok-resp)))))
 
 ;;--------------------------------------------------------------
+;; Process request for config file
+;;--------------------------------------------------------------
+(defn read-config
+  "Handler loads config file"
+  [params]
+  (timbre/info "::--> handler/read-config - params: " params)
+    
+  (let [results (fp/sync-read-config)]
+    (timbre/info "::--> handler/process-config - results from file service: " results)
+      (-> results
+          (assoc :message "Config file loaded")
+          (ok-resp)))  )
+
+
+;;--------------------------------------------------------------
 ;; Process an config file upload
 ;; side effects
 ;;--------------------------------------------------------------
@@ -89,6 +104,7 @@
           (assoc :message "Processing done")
           (assoc :path (:cannonical-path results))
           (ok-resp)))))
+
 
 ;;--------------------------------------------------------------
 ;; Progress functions for multipart warapper. Called during uploads.
@@ -108,6 +124,7 @@
 ;;--------------------------------------------------------------
 (defroutes site-routes
   (GET "/" [] (ring-response/resource-response "index.html" {:root "public"}))
+  (GET "/get/config" {params :params } (read-config params))
   (resources "/"))
 
 

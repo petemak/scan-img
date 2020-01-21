@@ -169,3 +169,12 @@
  (fn [db]
    (:progress-bar/actual-value db)))
 
+
+;;-----------------------------------------------------------
+;; Domino 4: querry effect for configuration file
+;;-----------------------------------------------------------
+(rf/reg-sub
+ 
+ (fn [db]
+   (:config-view/config db)))
+
