@@ -293,6 +293,6 @@
   []
   (let[ret (utils/read-config)
        results {:results  [{:command ["Read" "config.edn"]
-                            :message "Config file loaded"
+                            :message (if (some? ret) "Config file loaded" "Config file not found!" )
                             :config ret}]}]
     results))

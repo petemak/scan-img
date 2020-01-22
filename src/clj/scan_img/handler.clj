@@ -81,9 +81,9 @@
   (timbre/info "::--> handler/read-config - params: " params)
     
   (let [results (fp/sync-read-config)]
-    (timbre/info "::--> handler/process-config - results from file service: " results)
+    (timbre/info "::--> handler/process-config - results from file service: " (:config (first (:results results))))
       (-> results
-          (assoc :message "Config file loaded")
+          (assoc :message (if (some? (:config (first (:results results)))) "Config file loaded" "config file not found!"))
           (ok-resp)))  )
 
 
@@ -124,7 +124,7 @@
 ;;--------------------------------------------------------------
 (defroutes site-routes
   (GET "/" [] (ring-response/resource-response "index.html" {:root "public"}))
-  (GET "/get/config" {params :params } (read-config params))
+  (GET "/download/config" {params :params } (read-config params))
   (resources "/"))
 
 

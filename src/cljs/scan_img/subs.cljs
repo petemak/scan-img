@@ -174,7 +174,7 @@
 ;; Domino 4: querry effect for configuration file
 ;;-----------------------------------------------------------
 (rf/reg-sub
- 
+ :config-view/config
  (fn [db]
    (:config-view/config db)))
 

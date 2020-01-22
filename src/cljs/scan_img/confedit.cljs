@@ -95,18 +95,19 @@
 (defn editor
   []
   (fn []
-    (let [view-type @(rf/subscribe [:config/file-data])]
+    (let [config-text @(rf/subscribe [:config-view/config])] 
       [:div
        [:div {:class "paren-soup" :id "paren-soup"}
         [:div {:class "instarepl" :id "instarepl"}]
         [:div {:class "numbers" :id "numbers"}]
         [:div {:class "content" :id "content" :contenteditable "true" }
          ;; Add code here
-         {:name "Docker Image Scanner"
-          :port 3000
-          :mode :dev
-          :executable-cmd [["docker" "build" "-f" "{{cannonical-path}}" "-t {{file-name:1.0}}"]
-                           ["docker" "run" "--user {{user-name}}" "--password {{user-password}}" "{{image-name}}"]]}]]
+         ;;
+         (if (nil? config-text) ";; Add code here!" (-> config-text
+                                                        (:results)
+                                                        (first)
+                                                        (:config)))
+         ]]
        
        [:hr]
        [:div {:class "form-group"}
@@ -117,4 +118,4 @@
         [:button {:type :submit
                   :class "btn btn-primary float-right"
                   ;; :disabled @(rf/subscribe [:submit-disabled?])
-                  :on-click #(save-config-clicked "content" "config-file")} "Save"]]   ])))
+                  :on-click #(save-config-clicked "content" "config-file")} "Save"]]])))

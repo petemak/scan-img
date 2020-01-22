@@ -31,5 +31,5 @@
   "Generate a unique identifier for lists"
   [s]
   (if (cs/blank? s)
-    (str "id-" (rand-int 1000))    
-    (str "id-" s (rand-int 1000))))
+    (str "id-" (rand-int 100000))    
+    (str "id-" s (rand-int 100000))))

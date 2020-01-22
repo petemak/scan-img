@@ -100,7 +100,6 @@
   "Based on the currrent state and event in the app-db transition
   next state"
   [db event]
-  (println "::--> Transition sate from " (:state db) " with event " event)
   (if-let [nxt-state (ui-stm/next-state (:state db) event)] 
     (assoc db :state nxt-state)
     db))
@@ -244,9 +243,6 @@
 (rf/reg-event-fx
  :handle-error
  (fn [{:keys [db]} [evt res]]
-   (println "::-->  events/handle-error: " res)
-   (println "::-->  events/last-error: " (:last-error res))
-   (println "::-->  events/debug-message: " (:debug-message res))
    (rf/dispatch [:progress-bar/stop])     
    (let [m  (-> db
                 (transition-state evt)
@@ -304,11 +300,9 @@
 (rf/reg-event-fx
  :view-type
  (fn [{:keys [db]} [evt val]]
-   (if (= val :edit-config)
-     {:db (assoc db :view-type val)
-      :dispatch-n [:config-view/load-config :progress-bar/reset]}
-     {:db (assoc db :view-type val)
-      :dispatch [:progress-bar/reset]})))
+   (println "::--> events/view-type: " val)   
+   {:db (assoc db :view-type val)
+    :dispatch-n (list (when (= val :edit-config) [:config-view/download-config]) [:progress-bar/reset])}))
 
 
 
@@ -318,17 +312,18 @@
 ;; Domino 2: comupte effect of starting the ticker - 2
 ;;-----------------------------------------------------------
 (rf/reg-event-fx
- :config-view/load-config
+ :config-view/download-config
  (fn [{:keys [db]} [evt val]]
+   (println "::--> events/download-config...")   
    {:db db
     :http-xhrio {:method :get
-                 :uri "/upload/config"
+                 :uri "/download/config"
                  :timeout 60000
                  ;;:params val ;; :params requires :format
                  :format (ajxedn/edn-request-format)
                  :response-format (ajxedn/edn-response-format)
-                 :on-success [:handle-config-success]
-                 :on-failure [:handle-config-error]}}))
+                 :on-success [:handle-download-config-success]
+                 :on-failure [:handle-download-config-error]}}))
 
 
 
@@ -338,15 +333,15 @@
 ;;
 ;;-----------------------------------------------------------
 (rf/reg-event-fx
- :handle-config-success
+ :handle-download-config-success
  (fn [{:keys [db]} [evt res]]
-   (let [m  (-> db
-                (transition-state evt)
-                (assoc :show-progress-bar false)
-                (assoc :config-view/config res))]
-     {:db m
-      :dispatch-n (list [:upload-status res] [:progress-bar/tick 100])})))
-
+   (let [found? (some? (:config (first (:results res))))
+         hm (:message (first (:results res))) 
+         dm (if found? "Config file loaded" "Config file config.edn was not found!")
+         msg (utils/status-message hm [dm] nil)]
+     {:db (assoc db :config-view/config res)
+      :dispatch [:upload-status msg]})))
+   
 
 
 ;;-----------------------------------------------------------
@@ -355,11 +350,9 @@
 ;;
 ;;-----------------------------------------------------------
 (rf/reg-event-fx
- :handle-config-error
+ :handle-download-config-error
  (fn [{:keys [db]} [evt res]]
-   (rf/dispatch [:progress-bar/stop])     
    (let [m  (-> db
-                (assoc :show-progress-bar false)
                 (assoc :submission-results res))
          msg (utils/status-message (str "Load config failed  with error message -> " (:last-error res) " <-")
                                    [(str "Failure: " (:failure res))

@@ -13,9 +13,10 @@
 (defn list-to-ul
   "Create a UL from a list"
   [strlst]
-  [:ul {:class "list-unstyled"}
-    (for [st strlst]
-      [:li {:id (subs st 0 5)} st])])
+  (if (not (empty? strlst))
+    [:ul {:class "list-unstyled"}
+     (for [st strlst]
+       [:li {:id (utils/unique-key st)} st])]))
 
 
 ;;--------------------------------------------------------------
