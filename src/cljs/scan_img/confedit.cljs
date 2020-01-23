@@ -1,9 +1,12 @@
 (ns scan-img.confedit
-  (:require  [cljs.reader :as cr]
-            [paren-soup.core :as ps]
+  (:require [cljs.reader :as cr]
             [re-frame.core :as rf]
+            [paren-soup.core :as ps]
             [scan-img.utils :as utils]
             [ajax.core :refer [POST]]))
+
+
+(ps/init-all)
 
 
 (defn reset-form

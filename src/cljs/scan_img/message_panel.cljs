@@ -36,7 +36,7 @@
   [strlst]
   [:ul {:class "list-unstyled"}
     (for [st (vals strlst)]
-      [:li {:id (subs st 0 5)} st])])
+      [:li {:id (utils/unique-key st)} st])])
 
 ;;--------------------------------------------------------------
 ;; Utility: creates a string from a string list
@@ -44,7 +44,9 @@
 (defn map-to-str
   "Create a UL from a list"
   [mp]
-  (pr-str mp))
+  [:ul {:class "list-unstyled"}
+   (for [k (keys mp)]
+     [:li {:id (utils/unique-key  (get mp k))} (get mp k)] )])
 
 
 
