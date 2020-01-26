@@ -2,7 +2,7 @@
   (:require [re-frame.core :as rf]
             [scan-img.navbar :as nv]
             [scan-img.subs :as subs]
-            [paren-soup.core :as ps]
+            ;;[paren-soup.core :as ps]
             [scan-img.utils :as utils]
             [scan-img.confedit :as ced]
             [scan-img.code-view :as cdv ]
@@ -17,7 +17,7 @@
 ;;-----------------------------------------------
 ;; Initialise paren-soup
 ;;-----------------------------------------------
-(ps/init-all)
+;;(ps/init-all)
 
 
 

@@ -1,12 +1,9 @@
 (ns scan-img.confedit
   (:require [cljs.reader :as cr]
             [re-frame.core :as rf]
-            [paren-soup.core :as ps]
+            [paren-soup.core :as ps]            
             [scan-img.utils :as utils]
             [ajax.core :refer [POST]]))
-
-
-(ps/init-all)
 
 
 (defn reset-form
@@ -101,7 +98,7 @@
     (let [config-text @(rf/subscribe [:config-view/config])] 
       [:div
        [:div {:class "paren-soup" :id "paren-soup"}
-        [:div {:class "instarepl" :id "instarepl"}]
+       ;; [:div {:class "instarepl" :id "instarepl"}]
         [:div {:class "numbers" :id "numbers"}]
         [:div {:class "content" :id "content" :contenteditable "true" }
          ;; Add code here
@@ -109,9 +106,10 @@
          (if (nil? config-text) ";; Add code here!" (-> config-text
                                                         (:results)
                                                         (first)
-                                                        (:config)))
-         ]]
+                                                        (:config)))]
+        (ps/init-all)]
        
+
        [:hr]
        [:div {:class "form-group"}
         [:button {:type "reset"

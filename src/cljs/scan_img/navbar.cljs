@@ -2,57 +2,62 @@
   (:require [re-frame.core :as rf]
             [scan-img.subs :as subs]))
 
-;; Current state of navigation
-(def nav-state (atom {:view-type :upload-docker-file}))
 
-;; View types
-(def view-types [:upload-docker-file :upload-docker-image :edit-config])
+;;--------------------------------------------------------------------------
+;; Maps view keys to required event
+;;--------------------------------------------------------------------------
+(def view-type-map {:image-view :upload-docker-image
+                    :file-view :upload-docker-file
+                    :config-view :edit-config})
 
-(def view-txt {:upload-docker-file "f"
-               :upload-docker-image "i"
-               :edit-config "c"})
-
-;;-----------------------------------------------------
-;; Toggle view type
-;;-----------------------------------------------------
-(defn switch-view
-  "Switches to next view type in view-types array"
-  []
-  (let [idx (.indexOf view-types (:view-type @nav-state))
-        nidx (if (>= (inc idx) (count view-types)) 0 (inc idx))]
-    (swap! nav-state assoc :view-type (get view-types nidx)))
-  (:view-type @nav-state))
 
 
 ;;--------------------------------------------------------------------------
-;; Handle click on shwitc button
+;; Diptach view type event
 ;;--------------------------------------------------------------------------
-(defn handle-switch-btn
-  "Handler for switcher button"
-  [e]
-  (.preventDefault e)
-  (let [nv (switch-view)]
-    (rf/dispatch [:view-type nv])))
+(defn dispatch-event
+  "Dispatches a view event mapped to the specified key"
+  [ek]
+  (rf/dispatch [:view-type (get view-type-map ek)]))
 
+
+(defn view-type-is
+  "Check if the view id represents the current view type"
+  [vid current-vtype]
+  (= (get view-type-map vid) current-vtype))
+
+
+;;--------------------------------------------------------------------------
+;; Diptach view type event
+;;--------------------------------------------------------------------------
 (defn nav-bar
   "Generate navigation bar"
   []
-  (let [view-type @(rf/subscribe [:view-type])
-        btn-txt (get view-txt view-type ">>")]
-     [:div.container
-     [:nav.navbar.navbar-expand-lg.navbar-dark.bg-primary
-      [:span.navbar-text "Docker Image Scanner"]
-      [:button.navbar-toggler {:type "button"
-                               :data-toggle "collapse"
-                               :data-content "#navbarContents"
-                               ;;:aria-content "navbarContents"
-                               :aria-expanded "false"
-                               :aria-label "Toggle navidation"}
-       [:span.navbar-toggler-icon]]
-      [:div.collapse.navbar-collapse {:id "navbarContents"}
-       [:ul.navbar-nav.mr-auto
-        [:li.nav-item.active
-         [:a.nav-link {:href "#"} ""]]]
-       [:form.form-inline.my-2.my-lg-0
-        [:button.btn-outline-danger.my-2.my-sm-0 {:type "submit"
-                                                  :on-click #(handle-switch-btn %)} btn-txt]]]]]))
+  (fn []    
+    (let [view-type @(rf/subscribe [:view-type])]
+      [:div.container
+       [:nav.navbar.navbar-expand-lg.navbar-dark.bg-primary
+        [:span.navbar-text "Docker Image Scanner"]
+        [:button.navbar-toggler {:type "button"
+                                 :data-toggle "collapse"
+                                 :data-content "#navbarContents"
+                                 ;;:aria-content "navbarContents"
+                                 :aria-expanded "false"
+                                 :aria-label "Toggle navidation"}
+         [:span.navbar-toggler-icon]]
+        [:div.collapse.navbar-collapse {:id "navbarContents"}
+         [:ul.navbar-nav.mr-auto
+          [:li.nav-item.active
+           [:a.nav-link {:href "#"} ""]]]
+         [:div.btn-group.btn-group-sm {:role "group"}
+          [:button  {:class (if (view-type-is :image-view view-type) "btn btn-secondary" "btn btn-success")
+                     :type "button"
+                     :on-click #(dispatch-event :image-view)} "Ig"]
+          
+          [:button {:class (if (view-type-is :file-view view-type) "btn btn-secondary" "btn btn-warning")
+                    :type "button"
+                    :on-click #(dispatch-event :file-view)} "Fl"]
+          
+          [:button {:class (if (view-type-is :config-view view-type) "btn btn-secondary" "btn btn-danger")
+                    :type "button"
+                    :on-click #(dispatch-event :config-view)} "Cg"]]]]])))
