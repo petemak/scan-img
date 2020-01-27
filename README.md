@@ -1,7 +1,8 @@
 # scan-img
 
-A web application based on ClojureScript and Clojure for execution of remote commands
+A web application based on ClojureScript and Clojure for execution of remote commands.
 
+## Platforms and libraries used
 - ClojureScript for JavaScript UI,
 - Clojure for backend
 - [re-frame](https://github.com/Day8/re-frame)
@@ -9,6 +10,8 @@ A web application based on ClojureScript and Clojure for execution of remote com
 - Ring for HTTP abstraction
 - Compojure for routing
 - core.async for CSP in he file handling service
+- Bootstrap of UI styling
+- Font Awesome for icons
 
 ## Configuration
 
