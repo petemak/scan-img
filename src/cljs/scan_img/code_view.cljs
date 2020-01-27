@@ -79,9 +79,9 @@
         [:div {:class "form-group"}
          [:button {:type "reset"
                    :class "btn btn-danger float-left"
-                   :on-click #(reset-form)} "Clear"]
+                   :on-click #(reset-form)} [:i {:class "fas fa-eraser"}] " Reset"]
          
          [:button {:type :submit
                    :class "btn btn-primary float-right"
                    :disabled @(rf/subscribe [:submit-disabled?])
-                   :on-click #(submit-clicked)} "Scan..."]]]])))
+                   :on-click #(submit-clicked)} [:i {:class "far fa-check-square"}] "  Scan..."]]]])))

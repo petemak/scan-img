@@ -170,11 +170,11 @@
         [:div {:class "form-group"}
          [:button {:type "reset"
                    :class "btn btn-danger float-left"
-                   :on-click #(reset-form)} "Reset"]
+                   :on-click #(reset-form)} [:i {:class "fas fa-eraser"}] " Reset"]
          
          [:button {:type "button"
                    :class "btn btn-primary float-right"
                    :disabled (or (st/blank? @sel-file)(st/blank? @val-unm)(st/blank? @val-pwd)) 
-                   :on-click #(upload-file "file" "image")} "Start..."]]]])))
+                   :on-click #(upload-file "file" "image")} [:i {:class "far fa-check-square"}] " Scan..."]]]])))
 
 

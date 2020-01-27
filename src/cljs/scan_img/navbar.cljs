@@ -51,13 +51,10 @@
            [:a.nav-link {:href "#"} ""]]]
          [:div.btn-group.btn-group-sm {:role "group"}
           [:button  {:class (if (view-type-is :image-view view-type) "btn btn-secondary" "btn btn-success")
-                     :type "button"
-                     :on-click #(dispatch-event :image-view)} "Ig"]
+                     :on-click #(dispatch-event :image-view)}[:i {:class "fab fa-docker"}] " Image"]
           
           [:button {:class (if (view-type-is :file-view view-type) "btn btn-secondary" "btn btn-warning")
-                    :type "button"
-                    :on-click #(dispatch-event :file-view)} "Fl"]
+                    :on-click #(dispatch-event :file-view)}  [:i {:class "fas fa-code"}] " Code"]
           
           [:button {:class (if (view-type-is :config-view view-type) "btn btn-secondary" "btn btn-danger")
-                    :type "button"
-                    :on-click #(dispatch-event :config-view)} "Cg"]]]]])))
+                    :on-click #(dispatch-event :config-view)} [:i {:class "fas fa-edit"}] " Config"]]]]])))

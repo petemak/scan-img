@@ -114,9 +114,8 @@
        [:div {:class "form-group"}
         [:button {:type "reset"
                   :class "btn btn-danger float-left"
-                  :on-click #(reset-form)} "Clear"]
+                  :on-click #(reset-form)} [:i {:class "far fa-trash-alt"}] " Clear"]
         
         [:button {:type :submit
                   :class "btn btn-primary float-right"
-                  ;; :disabled @(rf/subscribe [:submit-disabled?])
-                  :on-click #(save-config-clicked "content" "config-file")} "Save"]]])))
+                  :on-click #(save-config-clicked "content" "config-file")} [:i {:class "far fa-save"}] " Save"]]])))
