@@ -14,6 +14,7 @@
                            [jarohen/chord "0.8.1"]
                            [yogthos/config "1.1.2"]
                            [fogus/ring-edn "0.3.0"]
+                           [buddy/buddy-hashers "1.4.0"]
                            [com.taoensso/timbre "4.10.0"]
                            [day8.re-frame/http-fx "0.1.6"]
                            [org.clojure/test.check "0.10.0"]
