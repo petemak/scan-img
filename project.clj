@@ -9,6 +9,7 @@
                            [compojure "1.6.1"]
                            [selmer "1.12.13"]
                            [ring "1.7.1"]
+                           [mount "0.1.16"]
                            [cljs-ajax "0.8.0"]
                            [paren-soup "2.16.0"]
                            [jarohen/chord "0.8.1"]
