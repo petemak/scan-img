@@ -1,5 +1,6 @@
 (ns scan-img.handler
-  (:require [scan-img.file-service :as fp]
+  (:require [scan-img.sec :as sec]
+            [scan-img.file-service :as fp]
             [compojure.core :refer [GET POST context routes defroutes]]
             [compojure.route :refer [resources]]
             [taoensso.timbre :as timbre]
@@ -8,7 +9,9 @@
             [ring.middleware.reload :refer [wrap-reload]]
             [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.edn :refer [wrap-edn-params]]
-            [ring.middleware.multipart-params :refer [wrap-multipart-params]]))
+            [ring.middleware.multipart-params :refer [wrap-multipart-params]]
+            [buddy.auth.backends.httpbasic :as buddy-bds]
+            [buddy.auth.middleware :as buddy-mid]))
 
 (timbre/set-level! :debug)
 
@@ -162,4 +165,7 @@
 ;; Refs for referenced by ring adapter as handler for
 ;; incomming requests
 ;;--------------------------------------------------------------
-(def dev-handler (-> #'handler wrap-reload))
+(def dev-handler (-> #'handler
+                     (buddy-mid/wrap-authorization sec/auth-backend)
+                     (buddy-mid/wrap-authentication sec/auth-backend)
+                     wrap-reload))
