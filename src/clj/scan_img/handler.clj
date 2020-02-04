@@ -5,13 +5,12 @@
             [compojure.route :refer [resources]]
             [taoensso.timbre :as timbre]
             [clojure.core.async :as async]
+            [buddy.auth.middleware :as buddy-mid]
             [ring.util.response :as ring-response]
             [ring.middleware.reload :refer [wrap-reload]]
             [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.edn :refer [wrap-edn-params]]
-            [ring.middleware.multipart-params :refer [wrap-multipart-params]]
-            [buddy.auth.backends.httpbasic :as buddy-bds]
-            [buddy.auth.middleware :as buddy-mid]))
+            [ring.middleware.multipart-params :refer [wrap-multipart-params]]))
 
 (timbre/set-level! :debug)
 
@@ -158,7 +157,8 @@
 ;;--------------------------------------------------------------
 (def handler
   (routes site-routes
-          wrapped-upload-routes))
+          wrapped-upload-routes
+          sec/wrap-authenticated-req))
 
 
 ;;--------------------------------------------------------------
