@@ -1,16 +1,20 @@
 (ns scan-img.sec
   (:require [buddy.auth :as auth]
+            [ring.util.response :as resp]
             [buddy.auth.backends.httpbasic :as httpbasic]
             [scan-img.db :refer [storage]]))
 
 
 
+;;----------------------------------------------------------------------
+;; Authentication handler. checks if the session is authenticated or not.
+;;----------------------------------------------------------------------
 (defn wrap-authenticated-req
   [handler]
   (fn [req]
     (if (auth/authenticated? req)
       (handler req)
-      (auth/throw-unauthorized))))
+      (resp/redirect "/login"))))
 
 ;;----------------------------------------------------------------------
 ;; The authfn is responsible for the second step of authentication.
@@ -23,7 +27,7 @@
   (when-let [user-name (get-in  [:body :user-name])]
     (let [user (.load-user storage {:user-name user-name})
           password (get-in req [:body :password])]
-      (when (= (:password user) password)
+      (when (and (some? password) (= (:password user) password))
         user-name))))
 
 (def auth-backend
