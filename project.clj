@@ -19,7 +19,7 @@
                            [com.taoensso/timbre "4.10.0"]
                            [day8.re-frame/http-fx "0.1.6"]
                            [org.clojure/test.check "0.10.0"]
-                 ;;[com.datomic/datomic-free "0.9.5697"]
+                           [com.datomic/datomic-free "0.9.5697"]
                            [org.clojars.hozumi/clj-commons-exec "1.2.0"]]
 
             :plugins [[lein-cljsbuild "1.1.7"]
