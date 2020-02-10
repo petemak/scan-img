@@ -41,7 +41,7 @@
     (let [user-data (vector {:user/id (:user-id user)
                              :user/password (:password user)})
           res (d/transact conn user-data)]
-      (:tx-data res)))
+      res))
 
   (load-user [this user]
     (timbre/info "::==> db.DatomicStore/load-user: " user "... ")
