@@ -14,6 +14,20 @@
                   :where [?e :user/id ?id]
                          [?e :user/password ?pwd]])
 
+
+;;------------------------------------------------------------------
+;; User querry
+;;------------------------------------------------------------------
+(def token-query '[:find ?te ?val ?iat
+                   :in $ ?uid
+                   :where [?ue :user/id ?uid]
+                          [?te :token/uref ?ue]
+                          [?te :token/val ?val]
+                          [?te :token/iat ?iat]])
+
+
+
+
 ;;------------------------------------------------------------------
 ;; Storage protocol defines how to store entities
 ;;------------------------------------------------------------------
@@ -27,6 +41,12 @@
 
   (load-user [this user] "Saves specified user credentials. 
                           Expected keys :user-name")
+
+  (find-token-by-userid [this user] "Find a token relating to the user id")
+
+  (invalidate-token [this user] "Make toke invalid")
+
+  (save-token [this user] "Store refresh token for specified user id")
   
   (stop [this] "Close this storage"))
 
@@ -46,6 +66,19 @@
   (load-user [this user]
     (timbre/info "::==> db.DatomicStore/load-user: " user "... ")
     (d/q  user-query (d/db conn) (:user-id user)))
+
+
+  (find-token-by-userid [this user]
+    (d/q token-query (d/db conn) (:user-id)))
+
+  (invalidate-token [this user]
+    )
+
+
+  (save-token [this user]
+    (d/transact conn (vector {:token/val (:token user)
+                              :token/iat (:iat user)
+                              :token/uref (:user-id user)})))
 
   (stop [this]
     (d/shutdown true)))

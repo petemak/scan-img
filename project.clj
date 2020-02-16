@@ -1,8 +1,8 @@
 (defproject scan-img "0.1.0-SNAPSHOT"
             :dependencies [[org.clojure/clojure "1.10.1"]
+                           [org.clojure/data.json "0.2.6"]
                            [org.clojure/core.async "0.4.500"]
                            [org.clojure/clojurescript "1.10.520"]
-                           [org.clojure/data.json "0.2.6"]
                            [ring "1.7.1"]
                            [buddy "2.0.0"]
                            [mount "0.1.16"]
@@ -12,6 +12,7 @@
                            [re-frame "0.10.8"]
                            [compojure "1.6.1"]
                            [cljs-ajax "0.8.0"]
+                           [clj-time "0.15.2"]
                            [paren-soup "2.16.0"]
                            [jarohen/chord "0.8.1"]
                            [yogthos/config "1.1.2"]
@@ -22,8 +23,9 @@
                            [com.datomic/datomic-free "0.9.5697"]
                            [org.clojars.hozumi/clj-commons-exec "1.2.0"]]
 
-            :plugins [[lein-cljsbuild "1.1.7"]
-                      [lein-ring "0.12.5"]]
+  :plugins [[lein-ring "0.12.5"]
+            [lein-cljsbuild "1.1.7"]
+            [org.clojars.benfb/lein-gorilla "0.6.0"]]
 
             :min-lein-version "2.5.3"
 

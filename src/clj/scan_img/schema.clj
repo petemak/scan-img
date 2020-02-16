@@ -19,4 +19,19 @@
    {:db/ident :user/email
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one
-    :db/doc "The user's email"}])
+    :db/doc "The user's email"}
+   
+    {:db/ident :token/val
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :db/doc "Token string"}
+   
+   {:db/ident :token/iat
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :db/doc "Token string"}
+   
+   {:db/ident :token/uref
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one
+    :db/doc "User reference"}])

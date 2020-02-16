@@ -32,7 +32,6 @@
   requests to terminate"
   []
   (when-not (nil? @httpkit-server)
- ;;   (mount/stop #'scan-img.file-service/file-processor)
     (@httpkit-server :timeout 100)))
 
 ;; -------------------------------------------------------------
@@ -43,7 +42,6 @@
         srv (or (:server cfg) :httpkit)]
     (println "Starting '" srv "' server on port '" port "' ....")
     (mount/start)
-;;    (mount/start #'scan-img.file-service/file-processor)
     (if (= srv :jetty)
       (jetty/run-jetty handler/dev-handler {:port port :join? false})
       (reset! httpkit-server (httpkit/run-server handler/dev-handler {:port port})))))

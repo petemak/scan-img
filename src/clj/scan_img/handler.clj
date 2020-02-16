@@ -1,5 +1,6 @@
 (ns scan-img.handler
-  (:require [scan-img.sec :as sec]
+  (:require [buddy.auth :as auth]
+            [scan-img.sec :as sec]
             [scan-img.file-service :as fp]
             [compojure.core :refer [GET POST context routes defroutes]]
             [compojure.route :refer [resources]]
@@ -9,15 +10,33 @@
             [ring.util.response :as ring-response]
             [ring.middleware.reload :refer [wrap-reload]]
             [ring.middleware.params :refer [wrap-params]]
+            [ring.middleware.session :refer [wrap-session]]
             [ring.middleware.edn :refer [wrap-edn-params]]
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]))
 
 (timbre/set-level! :debug)
 
+
+
 (defn ok-resp
   "Generate response map with specified data in the body"
   [data]
   (-> (ring-response/response (pr-str data))
+      (ring-response/content-type "application/edn")))
+
+
+(defn show-login
+  "Generate response map with specified data in the body"
+  [request]
+  (-> (ring-response/response {:login "REQUIRED"})
+      (ring-response/content-type "application/edn")))
+
+
+
+(defn do-login
+  "Generate response map with specified data in the body"
+  [request]
+  (-> (ring-response/response {:login "DENIED"})
       (ring-response/content-type "application/edn")))
 
 
@@ -50,6 +69,16 @@
           (assoc :path (:cannonical-path results))
           (ok-resp)))))
 
+
+
+(defn sec-process-file
+  "Only run if authenticated"
+  [req]
+  (println (str "::--> hadler/sec-process-file" req))
+
+  (if-not (auth/authenticated? req)
+    (auth/throw-unauthorized)
+    (process-file req)))
 
 
 ;;--------------------------------------------------------------
@@ -121,44 +150,50 @@
   (timbre/info "::==> handler/progress-fn bytes read " bytes-read))
 
 
+
 ;;--------------------------------------------------------------
 ;; web site routes for handling web site
 ;;--------------------------------------------------------------
-(defroutes site-routes
-  (GET "/" [] (ring-response/resource-response "index.html" {:root "public"}))
+(defroutes public-routes
+  (GET  "/login" request (show-login request))  
+  (POST "/login" request (do-login request))
   (GET "/download/config" {params :params } (read-config params))
   (resources "/"))
 
 
 ;;--------------------------------------------------------------
-;; upload routes for handling payload
+;; Routes worth securing: handling payload
 ;;
 ;; NOTE: we are destructuring using :params which is filled in
 ;;       by the wrap-params-middleware.
 ;;       :params combines both :query-params and :form-params
 ;;--------------------------------------------------------------
-(defroutes upload-routes
-  (POST "/upload/scan" request (process-file request))
+(defroutes secured-routes
+  (GET "/" [] (ring-response/resource-response "index.html" {:root "public"}))  
+  (POST "/upload/scan" request (sec-process-file request))
   (POST "/upload/code" {params :params} (process-code params))
   (POST "/upload/config" {params :params} (process-config params)))
 
 ;;--------------------------------------------------------------
 ;; Appliction routes combining site nd upload routes
 ;;--------------------------------------------------------------
-(def wrapped-upload-routes
-  (-> upload-routes
+(defroutes app-routes
+  (-> public-routes
+      (sec/wrap-authentication-token))
+  (-> secured-routes
+      (sec/wrap-authentication)
+      (sec/wrap-authentication-token)
       (wrap-edn-params)
-      (wrap-multipart-params {:progress-fn progress-fn})
-      (wrap-params)))
+      (wrap-multipart-params {:progress-fn progress-fn})))
 
 
 ;;--------------------------------------------------------------
 ;; Appliction routes combining site nd upload routes
 ;;--------------------------------------------------------------
 (def handler
-  (routes site-routes
-          wrapped-upload-routes
-          sec/wrap-authenticated-req))
+  (-> app-routes
+      (wrap-params)
+      (wrap-keyword-params)))
 
 
 ;;--------------------------------------------------------------
@@ -166,6 +201,5 @@
 ;; incomming requests
 ;;--------------------------------------------------------------
 (def dev-handler (-> #'handler
-                     (buddy-mid/wrap-authorization sec/auth-backend)
-                     (buddy-mid/wrap-authentication sec/auth-backend)
                      wrap-reload))
+
