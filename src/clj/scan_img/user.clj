@@ -21,3 +21,20 @@
         {:id (first datom)
          :user-id (second datom)
          :password (last datom)}))))
+
+
+
+;;----------------------------------------------------------------------
+;; The authfn is responsible for the second step of authentication.
+;; It receives the parsed auth data from request and should return a logical true
+;;----------------------------------------------------------------------
+(defn authenticate-user
+  "uses the submitted user name to retrieve user credentials and
+   compares with the submitted password provided by the user"
+  [credentials]
+  (println (str "::--> user/authenticate-user" credentials))
+  
+  (let [stored-user (load-user credentials)]
+    (if (and stored-user (bhs/check (:password credentials) (:password stored-user)))
+      [true (dissoc stored-user :password)]
+      [false {:message "Invalid user name or password"}])))

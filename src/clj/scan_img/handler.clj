@@ -10,8 +10,9 @@
             [ring.util.response :as ring-response]
             [ring.middleware.reload :refer [wrap-reload]]
             [ring.middleware.params :refer [wrap-params]]
-            [ring.middleware.session :refer [wrap-session]]
             [ring.middleware.edn :refer [wrap-edn-params]]
+            [ring.middleware.session :refer [wrap-session]]
+            [ring.middleware.keyword-params :refer [wrap-keyword-params]]
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]))
 
 (timbre/set-level! :debug)
@@ -36,8 +37,13 @@
 (defn do-login
   "Generate response map with specified data in the body"
   [request]
-  (-> (ring-response/response {:login "DENIED"})
-      (ring-response/content-type "application/edn")))
+  (let [[authenticated? results] (sec/authenticate-with-tokens (:form-params request))]
+    (if authenticated?
+      (-> (ring-response/response {:login "AUTHENTICATED"})
+          (ring-response/set-cookie "session_id" "?????")
+          (ring-response/content-type "application/edn"))      
+      (-> (ring-response/response {:login "DENIED"})
+          (ring-response/content-type "application/edn")))))
 
 
 ;;--------------------------------------------------------------

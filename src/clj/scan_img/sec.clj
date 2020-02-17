@@ -6,6 +6,7 @@
             [buddy.core.keys :as bdkys]
             [ring.util.response :as resp]))
 
+
 ;;---------------------------------------------------------------------
 ;; Config
 ;;
@@ -15,6 +16,15 @@
 (def auth-conf {:privkey-pem "/resources/sec/auth_priv_key.pem"
                 :pubkey-pem  "/resouces/sec/auth_pub_key.pem"
                 :passphrase "dpspasswd"})
+
+
+
+;;----------------------------------------------------------------------
+;; Usign token from session and associate as user to request
+;;----------------------------------------------------------------------
+(defn unsign-token [token]
+  (bdjws/unsign token (bdkys/public-key (io/resource (:pubkey-pem auth-conf)))))
+
 
 ;;----------------------------------------------------------------------
 ;; Get auth token from session and associate as user to request
@@ -27,7 +37,7 @@
           db-user (user/load-user db-token)]
       (if (:valid db-token)
         (do
-          (tokens/invalidate-token! (:id db-token))
+          (tokens/invalidate-refresh-token! (:id db-token))
           [true (tokens/gen-token-pair! auth-conf db-user)])
         [false {:message "Refresh token revoked or already exists"}]))
     [false {:message "Invalid or expired refresh token"}]))
@@ -72,33 +82,14 @@
 ;; The authfn is responsible for the second step of authentication.
 ;; It receives the parsed auth data from request and should return a logical true
 ;;----------------------------------------------------------------------
-(defn authenticate-user
+(defn authenticate-with-tokens
   "uses the submitted user name to retrieve user credentials and
    compares with the submitted password provided by the user"
-  [req]
-  (println (str "sec::--> authenticate-user" req))
-  (when-let [submitted-name (get-in req [:form-params :user-name])]
-    (let [stored-user (user/load-user {:user-name submitted-name})
-          submitted-password (get-in req [:form-params :password])]
-      (when (and (some? submitted-password) (= submitted-password (:password stored-user)))
-        submitted-name))))
+  [credentials]
+  (println (str "sec::--> authenticate-user" credentials))
+  (let [[authenticated? authed-user] (user/authenticate-user credentials)]
+    (if authenticated?
+      [true (tokens/gen-token-pair! authed-user)]
+      [false authed-user])))
 
-;;----------------------------------------------------------------------
-;; The authfn is responsible for the second step of authentication.
-;; It receives the parsed auth data from request and should return a logical true
-;;----------------------------------------------------------------------
-(defn unauth-fn
-  "Catches the unauthorised exception. There are two possibilities
-   1: the user is authenticated though the resource is forbidden (403)
-   2: The user is not authenticated so must log in"
-  [request meta-data]
-  (println (str "sec::--> authenticate-user" request))
-  (cond
-    (auth/authenticated? request) (resp/redirect "/forbidden")
-    :else (resp/redirect "/show-login")))
 
-;;----------------------------------------------------------------------
-;; Authentication back-end
-;;----------------------------------------------------------------------
-(def auth-backend
-  (sessbnd/session-backend {:unauthorized-handler unauth-fn}))

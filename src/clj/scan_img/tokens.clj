@@ -91,3 +91,7 @@
   (let [datom (.find-token-by-userid storage user)]
     {:id (first (first datom))
      :token (second (first datom))}))
+
+
+(defn invalidate-refresh-token!
+  [user])
