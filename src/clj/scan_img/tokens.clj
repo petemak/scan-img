@@ -47,11 +47,12 @@
 (defn gen-auth-token!
   "Generates an authentication token with an expiry time of 30 minutes"
   [auth-conf user]
-  (let [exp (-> (cljt/plus (cljt/now) (cljt/minutes 30))
+  (let [expire (-> (cljt/plus (cljt/now) (cljt/minutes 30))
                 (bdutl/to-timestamp))]
     (bdjws/sign {:user (dissoc user :password)}
                 (priv-key auth-conf)
-                {:alg :rs256 :exp exp})))
+                {:alg :rs256
+                 :exp expire})))
 
 ;;----------------------------------------------------------------------
 ;; Generate and auth token

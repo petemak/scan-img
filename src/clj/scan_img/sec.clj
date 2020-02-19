@@ -13,8 +13,8 @@
 ;; openssl genpkey -algorithm RSA -out auth_priv_key.pem -aes-128-cbc -pass pass:xyz123
 ;; openssl rsa -pubout -in auth_priv_key.pem -out auth_pub_key.pem
 ;;---------------------------------------------------------------------
-(def auth-conf {:privkey-pem "/resources/sec/auth_priv_key.pem"
-                :pubkey-pem  "/resouces/sec/auth_pub_key.pem"
+(def auth-conf {:privkey-pem "auth_priv_key.pem"
+                :pubkey-pem  "auth_pub_key.pem"
                 :passphrase "dpspasswd"})
 
 
@@ -86,10 +86,10 @@
   "uses the submitted user name to retrieve user credentials and
    compares with the submitted password provided by the user"
   [credentials]
-  (println (str "sec::--> authenticate-user" credentials))
+  (println (str "::--> sec/authenticate-user" credentials))
   (let [[authenticated? authed-user] (user/authenticate-user credentials)]
     (if authenticated?
-      [true (tokens/gen-token-pair! authed-user)]
+      [true (tokens/gen-token-pair! auth-conf authed-user)]
       [false authed-user])))
 
 
