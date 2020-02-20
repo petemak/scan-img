@@ -77,7 +77,7 @@
 
   (save-token [this user]
     (d/transact conn (vector {:token/val (:token user)
-                              :token/iat (:iat user)
+                              :token/iat (:issued user)
                               :token/uref (:user-id user)})))
 
   (stop [this]

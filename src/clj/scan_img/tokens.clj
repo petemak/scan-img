@@ -1,7 +1,7 @@
 (ns scan-img.tokens
   (:require [clj-time.core :as cljt]
             [clojure.java.io :as io]
-            [buddy.sign.jws :as bdjws]
+            [buddy.sign.jwt :as bdjwt]
             [buddy.sign.util :as bdutl]
             [buddy.core.keys :as bdkys]
             [scan-img.db :refer [storage]]))
@@ -37,7 +37,7 @@
   [token config]
   (->> (io/resource (:pubkey-pem config))
        (bdkys/public-key )
-       (bdjws/unsign token )))
+       (bdjwt/unsign token )))
 
 
 
@@ -49,7 +49,7 @@
   [auth-conf user]
   (let [expire (-> (cljt/plus (cljt/now) (cljt/minutes 30))
                 (bdutl/to-timestamp))]
-    (bdjws/sign {:user (dissoc user :password)}
+    (bdjwt/sign {:user (dissoc user :password)}
                 (priv-key auth-conf)
                 {:alg :rs256
                  :exp expire})))
@@ -61,7 +61,7 @@
   "Generates a refresh token with an expiry time of 7 days"  
   [auth-conf user]
   (let [iat (bdutl/to-timestamp (cljt/now))
-        token (bdjws/sign {:user-id (:id user)}
+        token (bdjwt/sign {:user-id (:id user)}
                           (priv-key auth-conf)
                           {:alg :rs256
                            :iat iat

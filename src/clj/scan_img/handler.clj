@@ -37,7 +37,7 @@
 (defn do-login
   "Generate response map with specified data in the body"
   [request]
-  (let [[authenticated? results] (sec/authenticate-with-tokens (:form-params request))]
+  (let [[authenticated? results] (sec/login-user (:form-params request))]
     (if authenticated?
       (-> (ring-response/response {:login "AUTHENTICATED"})
           (ring-response/set-cookie "session_id" "?????")

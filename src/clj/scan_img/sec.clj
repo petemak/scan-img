@@ -82,7 +82,7 @@
 ;; The authfn is responsible for the second step of authentication.
 ;; It receives the parsed auth data from request and should return a logical true
 ;;----------------------------------------------------------------------
-(defn authenticate-with-tokens
+(defn login-user
   "uses the submitted user name to retrieve user credentials and
    compares with the submitted password provided by the user"
   [credentials]
