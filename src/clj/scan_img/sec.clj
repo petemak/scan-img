@@ -31,9 +31,9 @@
 ;;----------------------------------------------------------------------
 (defn refresh-auth-token
   "Invalidate refresh toke and generate a new pair"
-  [refresh-token]
-  (if-let [unsigned (tokens/unsign-token refresh-token auth-conf)]
-    (let [db-token (tokens/token-by-userid unsigned)
+  [token]
+  (if-let [unsigned-token (tokens/unsign-token token auth-conf)]
+    (let [db-token (tokens/token-by-userid unsigned-token)
           db-user (user/load-user db-token)]
       (if (:valid db-token)
         (do
@@ -45,19 +45,7 @@
 ;;----------------------------------------------------------------------
 ;; Get auth token from session and associate as user to request
 ;;----------------------------------------------------------------------
-(defn- handle-token-refresh [handler req refresh-token]
-  (let [[ok? res] (refresh-auth-token refresh-token)
-        user (:user (when ok? (unsign-token (-> res :token-pair :auth-token))))]
-    (if user
-      (-> (handler (assoc req :auth-user user))
-          (assoc :session {:token-pair (:token-pair res)}))
-      {:status 302
-       :headers {"Location " (str "/login?m=" (:uri req))}})))
-
-;;----------------------------------------------------------------------
-;; Get auth token from session and associate as user to request
-;;----------------------------------------------------------------------
-(defn wrap-authentication-token [handler]
+(defn wrap-token [handler]
   (fn [req]
     (let [auth-token (-> req :session :token-pair :authentication-token)
           unsigned-auth (when auth-token (unsign-token auth-token))]
@@ -65,10 +53,28 @@
         (handler (assoc req :authenticated-user (:user unsigned-auth)))
         (handler req)))))
 
+
+
 ;;----------------------------------------------------------------------
-;; Get auth token from session and associate as user to request
+;; Refreshes the refresh token, then unsigh
 ;;----------------------------------------------------------------------
-(defn wrap-authentication [handler]
+(defn- handle-token-refresh [handler req token]
+  (let [[ok? refreshed-token] (refresh-auth-token token)
+        refreshed-auth-token (:user (when ok? (unsign-token (-> refreshed-token
+                                                                :token-pair
+                                                                :authentication-token))))]
+    (if refreshed-auth-token
+      (-> (handler (assoc req :auth-user refreshed-auth-token))
+          (assoc :session {:token-pair (:token-pair refreshed-token)}))
+      {:status 302
+       :headers {"Location " (str "/login?m=" (:uri req))}})))
+
+
+
+;;----------------------------------------------------------------------
+;; Gets the refresh token from session and associate as user to request
+;;----------------------------------------------------------------------
+(defn wrap-authenticate-user [handler]
   (fn [req]
     (if (:auth-user req)
       (handler req)
@@ -77,6 +83,9 @@
           (handle-token-refresh handler req refresh-token)
           {:status 302
            :headers {"Location " (str "/login?m=" (:uri req))}})))))
+
+
+
 
 ;;----------------------------------------------------------------------
 ;; The authfn is responsible for the second step of authentication.

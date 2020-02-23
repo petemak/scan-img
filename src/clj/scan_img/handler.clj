@@ -39,11 +39,9 @@
   [request]
   (let [[authenticated? results] (sec/login-user (:form-params request))]
     (if authenticated?
-      (-> (ring-response/response {:login "AUTHENTICATED"})
-          (ring-response/set-cookie "session_id" "?????")
-          (ring-response/content-type "application/edn"))      
-      (-> (ring-response/response {:login "DENIED"})
-          (ring-response/content-type "application/edn")))))
+      (-> (ring-response/redirect "/")
+          (assoc :session :token-pair {:token-pair results}))      
+      (ring-response/redirect "/login"))))
 
 
 ;;--------------------------------------------------------------
@@ -185,10 +183,10 @@
 ;;--------------------------------------------------------------
 (defroutes app-routes
   (-> public-routes
-      (sec/wrap-authentication-token))
+      (sec/wrap-token))
   (-> secured-routes
-      (sec/wrap-authentication)
-      (sec/wrap-authentication-token)
+      (sec/wrap-authenticate-user)
+      (sec/wrap-token)
       (wrap-edn-params)
       (wrap-multipart-params {:progress-fn progress-fn})))
 
