@@ -43,9 +43,15 @@
     [false {:message "Invalid or expired refresh token"}]))
 
 ;;----------------------------------------------------------------------
-;; Get auth token from session and associate as user to request
+;; If authentication token in request then unsign and 
 ;;----------------------------------------------------------------------
-(defn wrap-token [handler]
+(defn wrap-token
+  "Retunrs a handler function that gets authentication token from the
+  session unsigns it and associates it as [:authenticated-user:user]
+  to the request. Then calls the handler with the request
+
+  Otherwise if no authentication token then simply calls handler with the "
+  [handler] 
   (fn [req]
     (let [auth-token (-> req :session :token-pair :authentication-token)
           unsigned-auth (when auth-token (unsign-token auth-token))]
@@ -64,7 +70,7 @@
                                                                 :token-pair
                                                                 :authentication-token))))]
     (if refreshed-auth-token
-      (-> (handler (assoc req :auth-user refreshed-auth-token))
+      (-> (handler (assoc req :authenticated-user refreshed-auth-token))
           (assoc :session {:token-pair (:token-pair refreshed-token)}))
       {:status 302
        :headers {"Location " (str "/login?m=" (:uri req))}})))
@@ -74,9 +80,18 @@
 ;;----------------------------------------------------------------------
 ;; Gets the refresh token from session and associate as user to request
 ;;----------------------------------------------------------------------
-(defn wrap-authenticate-user [handler]
+(defn wrap-authenticate-user
+  "Returns a handler that checks for the authenticated user
+  :auth-user in the request. Note: :auth-user is placed during
+  login.
+  If found calls next handler
+  If not then checks for a refresh token in the session
+  [:session :token-pair :refresh-token] and refreshes it
+  by calling handle-token refresh.
+  Last resort is to :staus 302 and /login"
+  [handler]
   (fn [req]
-    (if (:auth-user req)
+    (if (:authenticated-user req)
       (handler req)
       (let [refresh-token (-> req :session :token-pair :refresh-token)]
         (if refresh-token

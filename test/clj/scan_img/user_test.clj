@@ -45,4 +45,4 @@
     (testing "user id is same"
       (is (= (:user-id test-user) (:user-id (user/load-user test-user)))))
     (testing "password credentials"
-      (= true (first (user/authenticate-user test-user))))))t
+      (= true (first (user/authenticate-user test-user))))))

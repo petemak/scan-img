@@ -94,6 +94,7 @@
   (let [db-uri "datomic:mem://credentials"
         uri? (d/create-database db-uri)
         conn (d/connect db-uri)]
+    (timbre/info "::==> db.DatomicStore/start-db: " db-uri "... ")    
     (d/transact conn schema/user-schema)
     (->DatomicStore conn)))
 
@@ -103,7 +104,8 @@
 ;;------------------------------------------------------------------
 (defn stop-db
   [db]
-  (timbre/info "::==> db.DatomicStore/stop-db: sopping database" ))
+  (timbre/info "::==> db.DatomicStore/stop-db: sopping database" )
+  (.stop db))
 
 
 ;;------------------------------------------------------------------

@@ -79,7 +79,7 @@
 (defn gen-token-pair!
   "Generate an auth and a refresh toke pair"
   [auth-conf user]
-  {:token-pair {:auth-token (gen-auth-token! auth-conf user)
+  {:token-pair {:authentication-token (gen-auth-token! auth-conf user)
                 :refresh-token (gen-refresh-token! auth-conf user)}})
 
 

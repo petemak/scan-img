@@ -54,7 +54,7 @@
   [req]
   (let [params (:params req)
         file (get params "file")
-        file-data (:tempfile file)
+         file-data (:tempfile file)
         file-name (:filename file)
         file-size (:size file)
         file-type (get params "upload-type")
