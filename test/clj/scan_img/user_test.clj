@@ -9,7 +9,7 @@
 
 
 
-(def test-user {:user-id "test" :password "testpwd"})
+(def test-user {:user-id "test123" :password "testpwd"})
 
 
 (defn store-user

@@ -22,9 +22,14 @@
 ;; Mock POST "upload/code"
 (def code-req (-> (mock/request :post "/upload/code")
                   (mock/content-type "application/edn")
-                  (mock/body "{:code \"code\"
-                               :name \"s34234\"
-                               :password \"wrteert\"}")))
+                  (mock/body (prn-str {:user-id "test123"
+                                       :password "werwer"}))))
+
+
+(def login-req (-> (mock/request :post "/login")
+                   (mock/content-type "application/edn")
+                   (mock/body (prn-str {:user-id "test123"
+                                        :password "testpwd"}))))
 
 
 ;; 
@@ -38,3 +43,9 @@
 (deftest read-config
   (testing "That config file is loaded"
     (is (not= nil (handler/read-config (mock/request :get "/get/config"))))))
+
+
+
+(deftest login
+  (testing "Testing login"
+    (testing "That login for a registerred users returns true")))
