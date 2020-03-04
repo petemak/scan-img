@@ -2,7 +2,8 @@
   (:require [clojure.test :refer :all]
             [ring.mock.request :as mock]
             [clj-http.client :as client]
-            [scan-img.handler :as handler]))
+            [scan-img.handler :as handler]
+            [scan-img.server :as svr]))
 
 
 
@@ -31,6 +32,18 @@
                    (mock/body (prn-str {:user-id "test123"
                                         :password "testpwd"}))))
 
+
+
+
+(defn server-fixture
+  [f]
+  (try
+    (svr/start-sever)
+    (f)
+    (svr/stop-server)))
+
+
+(use-fixtures :once server-fixture)
 
 ;; 
 (deftest code-upload

@@ -27,21 +27,28 @@
 ;; From docs: :timeout is optional, when no timeout,
 ;; stop immediately
 ;; ------------------------------------------------------------- 
-(defn stop-httpkit
+(defn stop-server
   "Stop server gracefully (wait 100ms) to allow for existing
   requests to terminate"
   []
   (when-not (nil? @httpkit-server)
     (@httpkit-server :timeout 100)))
 
-;; -------------------------------------------------------------
-;; Reads the application configuration file
-;;--------------------------------------------------------------
-(defn -main [& args]
+
+(defn start-sever
+  "Starts the server"
+  []
   (let [port (or (:port cfg) "3000")
         srv (or (:server cfg) :httpkit)]
     (println "Starting '" srv "' server on port '" port "' ....")
     (mount/start)
     (if (= srv :jetty)
       (jetty/run-jetty handler/dev-handler {:port port :join? false})
-      (reset! httpkit-server (httpkit/run-server handler/dev-handler {:port port})))))
+      (reset! httpkit-server (httpkit/run-server handler/dev-handler {:port port}))))  )
+
+;; -------------------------------------------------------------
+;; Reads the application configuration file
+;;--------------------------------------------------------------
+(defn -main [& args]
+  (mount/start)
+  (start-sever))
