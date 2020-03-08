@@ -1,5 +1,6 @@
 (ns scan-img.server
   (:require [clojure.edn :as edn]
+            [clojure.walk :as walk]
             [mount.core :as mount]
             [scan-img.utils :as utils]
             [scan-img.handler :as handler]
@@ -28,11 +29,12 @@
 ;; stop immediately
 ;; ------------------------------------------------------------- 
 (defn stop-server
-  "Stop server gracefully (wait 100ms) to allow for existing
+  "Stop server gracefully (wait 50ms) to allow for existing
   requests to terminate"
   []
   (when-not (nil? @httpkit-server)
-    (@httpkit-server :timeout 100)))
+    (@httpkit-server :timeout 50))
+  (mount/stop))
 
 
 (defn start-sever

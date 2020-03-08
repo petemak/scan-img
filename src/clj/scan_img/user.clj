@@ -1,5 +1,6 @@
 (ns scan-img.user
   (:require [buddy.hashers :as bhs]
+            [taoensso.timbre :as timbre]
             [scan-img.db :refer [storage]]))
 
 
@@ -20,6 +21,7 @@
   "Load the user using the used id. 
    Datomic datoms [123133 \"user id\" \"password\"]"
   [user]
+  (timbre/info "::==> user/load-user: " user)
   (let [db-user (.load-user storage user)]
     (when-not (nil? db-user)
       (when-let [datom (first db-user)]
@@ -27,6 +29,18 @@
          :user-id (second datom)
          :password (last datom)}))))
 
+
+
+(defn unregister-user
+  "Retract user entity"
+  [user]
+  (let [res (.load-user storage user)]
+    (when-not (nil? res)
+      (let [datom (first res)
+            db-user {:id (first datom)
+                     :user-id (second datom)
+                     :password (last datom)}]
+        (.retract-user storage db-user)))))
 
 
 ;;----------------------------------------------------------------------
@@ -37,9 +51,10 @@
   "uses the submitted user name to retrieve user credentials and
    compares with the submitted password provided by the user"
   [credentials]
-  (println (str "::--> user/authenticate-user" credentials))
-  
+  (timbre/info "::--> user/authenticate-user - loading user from db... ")  
   (let [stored-user (load-user credentials)]
+    (timbre/info "::--> user/authenticate-user - loaded user from db: " stored-user)
     (if (and stored-user (bhs/check (:password credentials) (:password stored-user)))
       [true (dissoc stored-user :password)]
       [false {:message "Invalid user name or password"}])))
+

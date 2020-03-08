@@ -26,6 +26,15 @@
                           [?te :token/iat ?iat]])
 
 
+;;------------------------------------------------------------------
+;; User rectraction data
+;;------------------------------------------------------------------
+(defn user-retraction-data
+  [user]
+  [[:db/retractEntity (:id user)]
+   ;; [:user/id (:user-id user)]
+   ;; [:user/password (:password user)]
+   ])
 
 
 ;;------------------------------------------------------------------
@@ -38,6 +47,8 @@
 
   (save-user [this user] "Load specified user credentials. 
                           Expected key :user-name and :secret")
+
+  (retract-user [this user] "Retract a user. Argument must contain ")
 
   (load-user [this user] "Saves specified user credentials. 
                           Expected keys :user-name")
@@ -58,13 +69,17 @@
   (save-user [this user]
     (timbre/info "::==> db.DatomicStore/save-user: " user "... ")
     
-    (let [user-data (vector {:user/id (:user-id user)
-                             :user/password (:password user)})
+    (let [user-data [{:user/id (:user-id user)
+                      :user/password (:password user)}]
           res (d/transact conn user-data)]
       res))
 
+
+  (retract-user [this user]
+    (d/transact conn (user-retraction-data user)))
+  
   (load-user [this user]
-    (timbre/info "::==> db.DatomicStore/load-user: " user "... ")
+    (timbre/info "::==> db.DatomicStore/load-user: " (dissoc user :password) "... ")
     (d/q  user-query (d/db conn) (:user-id user)))
 
 

@@ -4,6 +4,7 @@
             [scan-img.tokens :as tokens]
             [buddy.sign.jws :as bdjws]
             [buddy.core.keys :as bdkys]
+            [taoensso.timbre :as timbre]
             [ring.util.response :as resp]))
 
 
@@ -110,7 +111,7 @@
   "uses the submitted user name to retrieve user credentials and
    compares with the submitted password provided by the user"
   [credentials]
-  (println (str "::--> sec/authenticate-user" credentials))
+  (timbre/info "::--> sec/login-user - credentials: " credentials)
   (let [[authenticated? authed-user] (user/authenticate-user credentials)]
     (if authenticated?
       [true (tokens/gen-token-pair! auth-conf authed-user)]

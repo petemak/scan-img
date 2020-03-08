@@ -37,10 +37,12 @@
 (defn do-login
   "Generate response map with specified data in the body"
   [request]
-  (let [[authenticated? results] (sec/login-user (:form-params request))]
+  (timbre/info "::--> handler/do-login - params: " (dissoc (:params request) :password))
+  (let [[authenticated? results] (sec/login-user (:params request))]
+    (timbre/info "::--> handler/do-login - authentication results: " authenticated? " - " results)
     (if authenticated?
       (-> (ring-response/redirect "/")
-          (assoc :session :token-pair {:token-pair results}))      
+          (assoc :session {:token-pair results}))      
       (ring-response/redirect "/login"))))
 
 
@@ -180,10 +182,33 @@
 
 ;;--------------------------------------------------------------
 ;; Appliction routes combining site nd upload routes
+;;
+;; Middleware:
+;;------------
+;;1) wrap-params - parse URL-encoded parameters and add following
+;;                  keys to the request map
+;;      - :query-params - A map of parameters from the query string
+;;      - :form-params - A map of parameters from submitted form data
+;;      - :params - A merged map of all parameters
+;;2) wrap-edns-param - parse request body as edn and augment :params
+;;
+;;3) wrap-keyword-params - converts string keys in the :params map to keywords.
+;;
+;;
+;; Ring request:  "/search&q=clojure"
+;; ----------------------------------
+;; {:request-method :get
+;;  :uri "/search"
+;;  :query-string "q=clojure"
+;;  :query-params {"q" "clojure"}
+;;  :form-params {}
+;;  :params {"q" "clojure"}}
+;;
 ;;--------------------------------------------------------------
 (defroutes app-routes
   (-> public-routes
-      (sec/wrap-token))
+      (sec/wrap-token)
+      (wrap-edn-params))
   (-> secured-routes
       (sec/wrap-authenticate-user)
       (sec/wrap-token)
@@ -196,8 +221,8 @@
 ;;--------------------------------------------------------------
 (def handler
   (-> app-routes
-      (wrap-params)
-      (wrap-keyword-params)))
+      (wrap-keyword-params)
+      (wrap-params)))
 
 
 ;;--------------------------------------------------------------
