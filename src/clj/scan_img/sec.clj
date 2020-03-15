@@ -5,7 +5,9 @@
             [buddy.sign.jws :as bdjws]
             [buddy.core.keys :as bdkys]
             [taoensso.timbre :as timbre]
-            [ring.util.response :as resp]))
+            [ring.util.response :as resp]
+            [ring.middleware.session :refer [wrap-session]]            
+            [ring.middleware.session.cookie :refer [cookie-store]]))
 
 
 ;;---------------------------------------------------------------------
@@ -42,6 +44,23 @@
           [true (tokens/gen-token-pair! auth-conf db-user)])
         [false {:message "Refresh token revoked or already exists"}]))
     [false {:message "Invalid or expired refresh token"}]))
+
+
+;;----------------------------------------------------------------------
+;; Use a session storage engine that stores session data an
+;; encrypted cookies.
+;;----------------------------------------------------------------------
+(defn wrap-auth-cookie
+  [handler enc-key]
+  "Wraps hndler with an encrypted cookie for storing session data. 
+     enc-key - The secret key to encrypt the session cookie. Must be exactly 16 bytes."
+  (-> handler
+      (wrap-session
+       {:store (cookie-store {:key enc-key})
+        :cookie-name "scan-image"
+        :cookie-attrs {:max-age (* 14 24 60 60)}})))
+
+
 
 ;;----------------------------------------------------------------------
 ;; If authentication token in request then unsign and 

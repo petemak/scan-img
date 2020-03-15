@@ -81,7 +81,16 @@
   (testing "Testing login"
     (testing "That login for a registerred users returns true"
       (let [resp (http/post "http://localhost:3000/login" {:form-params test-user})]
+        (println "::--> response: ==================================================================================")
+        (println "::--> response: " resp)
+        (println "::--> response: ==================================================================================")
+        (println "::--> response: " (:headers  resp))
+        (println "::--> response: ==================================================================================")
+        (println "::--> response: " (first (:headers resp)))
+        (println "::--> response: ==================================================================================")
+        (println "::--> response: " (type (first (:headers resp))))
         (is (= 302 (:status resp)))
+        (is (= ["Location" "/"] (first (:headers resp))))
          
         ))))
 

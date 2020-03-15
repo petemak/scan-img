@@ -34,6 +34,10 @@
 
 
 
+;;--------------------------------------------------------------
+;; Authentication function
+;; s
+;;--------------------------------------------------------------
 (defn do-login
   "Generate response map with specified data in the body"
   [request]
@@ -163,7 +167,6 @@
 (defroutes public-routes
   (GET  "/login" request (show-login request))  
   (POST "/login" request (do-login request))
-  (GET "/download/config" {params :params } (read-config params))
   (resources "/"))
 
 
@@ -178,7 +181,8 @@
   (GET "/" [] (ring-response/resource-response "index.html" {:root "public"}))  
   (POST "/upload/scan" request (sec-process-file request))
   (POST "/upload/code" {params :params} (process-code params))
-  (POST "/upload/config" {params :params} (process-config params)))
+  (POST "/upload/config" {params :params} (process-config params))
+  (GET "/download/config" {params :params } (read-config params)))
 
 ;;--------------------------------------------------------------
 ;; Appliction routes combining site nd upload routes
@@ -204,6 +208,8 @@
 ;;  :form-params {}
 ;;  :params {"q" "clojure"}}
 ;;
+;;encryption key must come from config file!!!
+;; 
 ;;--------------------------------------------------------------
 (defroutes app-routes
   (-> public-routes
@@ -213,7 +219,8 @@
       (sec/wrap-authenticate-user)
       (sec/wrap-token)
       (wrap-edn-params)
-      (wrap-multipart-params {:progress-fn progress-fn})))
+      (wrap-multipart-params {:progress-fn progress-fn})
+      (sec/wrap-auth-cookie "cokiepasswd12345")))
 
 
 ;;--------------------------------------------------------------
