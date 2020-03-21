@@ -73,6 +73,4 @@
   (mount/start)
 
   (def dbusr (u/load-user user1))
-
-  (u/)
   )

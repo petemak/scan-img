@@ -1,5 +1,5 @@
 (ns scan-img.db
-  (:require [datomic.api :as d]
+  (:require [datomic.api :as d]           
             [buddy.hashers :as bh]
             [scan-img.schema :as schema]
             [taoensso.timbre :as timbre]            
@@ -64,7 +64,7 @@
 ;;------------------------------------------------------------------
 ;; Datomic implementation of storage protocol
 ;;------------------------------------------------------------------
-(defrecord DatomicStore [conn]
+(defrecord DatomicStore [conn dburi]
   Storage
   (save-user [this user]
     (timbre/info "::==> db.DatomicStore/save-user: " user "... ")
@@ -96,7 +96,8 @@
                               :token/uref (:user-id user)})))
 
   (stop [this]
-    (d/shutdown true)))
+    (d/release (:conn this))
+    (d/delete-database (:dburi this))))
 
 
 
@@ -106,12 +107,12 @@
 (defn start-db
   "Connesct Returns a datomic db instance"
   []
-  (let [db-uri "datomic:mem://credentials"
+  (let [db-uri "datahike:mem://credentials"
         uri? (d/create-database db-uri)
         conn (d/connect db-uri)]
     (timbre/info "::==> db.DatomicStore/start-db: " db-uri "... ")    
     (d/transact conn schema/user-schema)
-    (->DatomicStore conn)))
+    (->DatomicStore conn db-uri)))
 
 
 ;;------------------------------------------------------------------

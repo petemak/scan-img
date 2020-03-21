@@ -20,7 +20,8 @@
                            [com.taoensso/timbre "4.10.0"]
                            [day8.re-frame/http-fx "0.1.6"]
                            [org.clojure/test.check "0.10.0"]
-                           [com.datomic/datomic-free "0.9.5697"]
+                           ;;[io.replikativ/datahike "0.2.1"]
+                           [com.datomic/datomic-free "0.9.5697" :exclusions [[com.google.guava/guava]]]
                            [org.clojars.hozumi/clj-commons-exec "1.2.0"]]
 
   :plugins [[lein-ring "0.12.5"]
@@ -35,13 +36,14 @@
 
             :figwheel {:css-dirs ["resources/public/css"]
                        :ring-handler scan-img.handler/dev-handler}
+  
 
   ;; :ring {:handler scan-img.server/app-routes}
 
             :main scan-img.server
 
             :profiles  {:dev {:dependencies [[binaryage/devtools "0.9.10"]
-                                             [fsmviz "0.1.3"]
+                                             [fsmviz "0.1.3"  ]
                                              [peridot "0.5.1"]
                                              [clj-http "3.10.0"]
                                              [ring/ring-mock "0.4.0"]
