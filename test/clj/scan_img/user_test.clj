@@ -12,18 +12,15 @@
 (def test-user {:user-id "test123" :password "testpwd"})
 
 
-(defn store-user
-  []
-  (user/register-user test-user))
-
 
 (defn setup-db
   []
   (mount/start)
-  (store-user))
+  (user/register-user test-user))
 
 (defn shutdown-db
   []
+  (user/unregister-user test-user)
   (mount/stop))
 
 

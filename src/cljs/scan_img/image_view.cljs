@@ -1,10 +1,7 @@
 (ns scan-img.image-view
   (:require [cljs.reader :as cr]
             [re-frame.core :as rf]
-            [scan-img.navbar :as nv]
-            [scan-img.subs :as subs]
             [scan-img.utils :as utils]
-            [scan-img.message-panel :as msg]
             [clojure.string :as st]
             [ajax.core :refer [POST]]))
 

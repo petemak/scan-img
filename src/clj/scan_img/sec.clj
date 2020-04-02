@@ -111,13 +111,16 @@
   Last resort is to :staus 302 and /login"
   [handler]
   (fn [req]
+    (timbre/info "::--> sec/wrap-authenticate-user - :authenticated-user " (:authenticated-user req))
+    (timbre/info "::--> sec/wrap-authenticate-user - :refresh-token " (-> req :session :token-pair :refresh-token))    
     (if (:authenticated-user req)
       (handler req)
       (let [refresh-token (-> req :session :token-pair :refresh-token)]
+        
         (if refresh-token
           (handle-token-refresh handler req refresh-token)
           {:status 302
-           :headers {"Location " (str "/login?m=" (:uri req))}})))))
+           :headers {"Location" (str "/login?m=" (:uri req))}})))))
 
 
 
