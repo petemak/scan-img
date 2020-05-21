@@ -67,15 +67,14 @@
   :file-type - type of file
   :cannonical-path - cannonical path of file "
   [data]
-  (let [type (:file-type data)]
+  (let [type (:file-type data)
+        config (utils/read-config)]
     (cond
-      (= type :docker-image) (utils/read-config)
-      (= type :docker-text) (utils/read-config)
-      (= type :config) (utils/read-config)
+      (= type :docker-image) (:docker-image config) 
+      (= type :docker-text) (:docker-file config)
+      (= type :config) config
       (= type "command") (utils/edn-from-file (:file-data data))
       :else nil)))
-
-
 
 
 ;;--------------------------------------------------------------
@@ -85,11 +84,13 @@
 (defn run-commands!
   "Run shell command and return relults. The shell
   commands expected to be provided in config.edn
-  with the key :executable-cmd.
+  with the key :executable-cmds.
   Example:
   {:name \"Docker Image Scanner\"
-   :executable-cmd [[\"command-1\" \"params-1\"]
-                    [\"command-2\" \"params-2\"]]}
+   {:docker-image {:executable-cmds [[\"command-1\" \"params-1\"]
+                                     [\"command-2\" \"params-2\"]]}
+    :docker-file {:executable-cmds  [[\"command-1\" \"params-1\"]
+                                     [\"command-2\" \"params-2\"]]}}}
 
   The return map contains a list of maps mapped to the key :results
   Each map in the list contains tje executed command and results
@@ -104,7 +105,7 @@
   (timbre/info "::--> file-service/run-commands! - cannonical path: " (:cannonical-path data))
   ;; (timbre/info "::--> file-service/run-commands! - input data: " data)
   (if-let [config (resolve-command-config! data)]
-    (let [commands (process-command-params (:executable-cmd config) data)]
+    (let [commands (process-command-params (:executable-cmds config) data)]
       (timbre/info "::==> file-service/run-commands! - commands processed for execution: " (pr-str commands))
       (timbre/info "::==> file-service/rund-command! with config found: " config)
 

@@ -1,0 +1,10 @@
+{:name "Docker Image Scanner"
+ :port 3000
+ :mode :dev
+ :executable-cmd [["docker" "build" "-f" "{{cannonical-path}}" "-t {{file-name:1.0}}"]
+                  ["docker" "run" "--user {{user-name}}" "--password {{user-password}}" "{{image-name}}"]]
+
+ :docker-image {:executable-cmds [["docker" "build" "-f" "{{cannonical-path}}" "-t {{file-name:1.0}}"]
+                                  ["docker" "run" "--user {{user-name}}" "--password {{user-password}}" "{{image-name}}"]]}
+ :docker-file {:executable-cmds [["docker" "build" "-f" "{{cannonical-path}}" "-t {{file-name:1.0}}"]
+                                 ["docker" "run" "--user {{user-name}}" "--password {{user-password}}" "{{image-name}}"]]}}

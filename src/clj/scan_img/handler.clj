@@ -54,7 +54,7 @@
 ;; Process an upload for scanning
 ;; side effects
 ;;--------------------------------------------------------------
-(defn process-file
+(defn process-image
   "Handler processes file uploads
    First saves and then posts uploaded event on processing quest"
   [req]
@@ -67,11 +67,11 @@
         user-name (:user-name params)
         password (:password params)
         resp-data (dissoc file :tempfile)]
-    (timbre/info "::--> process-file upload - params: " params)
-    (timbre/info "::--> process-file upload - :upload-type : " file-type)
+    (timbre/info "::--> process-image upload - params: " params)
+    (timbre/info "::--> process-image upload - :upload-type : " file-type)
     ;;
     (let [results (fp/sync-reg-image-event file-data file-name file-type user-name password)]
-      (timbre/info "::--> process-file upload - reuslts from file service: " results)
+      (timbre/info "::--> process-image upload - reuslts from file service: " results)
       (-> resp-data
           (assoc :message (str  "File [" file-name "] saved"))
           (assoc :cmd-results results)
@@ -81,14 +81,14 @@
 
 
 
-(defn sec-process-file
+(defn sec-process-image
   "Only run if authenticated"
   [req]
-  (println (str "::--> hadler/sec-process-file" req))
+  (println (str "::--> hadler/sec-process-image" req))
 
   (if-not (auth/authenticated? req)
     (auth/throw-unauthorized)
-    (process-file req)))
+    (process-image req)))
 
 
 ;;--------------------------------------------------------------
@@ -165,8 +165,11 @@
 ;; web site routes for handling web site
 ;;--------------------------------------------------------------
 (defroutes public-routes
+  (GET "/" [] (ring-response/resource-response "index.html" {:root "public"}))
   (GET  "/login" request (show-login request))  
   (POST "/login" request (do-login request))
+  (POST "/upload/scan" request (process-image request))
+  (POST "/upload/code" {params :params} (process-code params))
   (resources "/"))
 
 
@@ -178,9 +181,6 @@
 ;;       :params combines both :query-params and :form-params
 ;;--------------------------------------------------------------
 (defroutes secured-routes
-  (GET "/" [] (ring-response/resource-response "index.html" {:root "public"}))  
-  (POST "/upload/scan" request (sec-process-file request))
-  (POST "/upload/code" {params :params} (process-code params))
   (POST "/upload/config" {params :params} (process-config params))
   (GET "/download/config" {params :params } (read-config params)))
 
@@ -214,12 +214,12 @@
 (defroutes app-routes
   (-> public-routes
       (sec/wrap-token)
-      (wrap-edn-params))
+      (wrap-edn-params)
+      (wrap-multipart-params {:progress-fn progress-fn}))
   (-> secured-routes
       (sec/wrap-authenticate-user)
       (sec/wrap-token)
       (wrap-edn-params)
-      (wrap-multipart-params {:progress-fn progress-fn})
       (sec/wrap-auth-cookie "cokiepasswd12345")))
 
 
