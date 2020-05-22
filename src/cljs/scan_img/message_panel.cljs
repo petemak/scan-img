@@ -60,7 +60,7 @@
     (instance? cljs.core/PersistentVector outstr) (list-to-ul outstr)
     (instance? cljs.core/List outstr) (list-to-ul outstr)
     (instance? cljs.core/PersistentArrayMap outstr) (map-to-ul outstr)
-    :else [:p outstr]))
+    :else [:p (str outstr)]))
 
 
 ;;--------------------------------------------------------------
@@ -73,7 +73,7 @@
     (instance? cljs.core/PersistentVector lst) (list-to-str lst)
     (instance? cljs.core/List lst) (list-to-str lst)
     (instance? cljs.core/PersistentArrayMap lst) (map-to-str lst)
-    :else lst))
+    :else (str lst)))
 
 
 
@@ -92,8 +92,10 @@
                outstrlst ...}  ]}"  
   [msg]
   (println "::==> message-panel/message-view message: " msg)
-  (println "::==> message-panel/type msg: " (type msg))
-  (println "::==> message-panel/type command: " (type (:command msg)))
+  (println "::==> message-panel/message-view type msg: " (type msg))
+  (println "::==> message-panel/message-view type command: " (type (:command msg)))
+  (println "::==> message-panel/message-view msg value: " (:message msg))
+  (println "::==> message-panel/message-view command value: " (:command msg))
   [:div {:class "alert alert-info alert-dismissible fade show"
          :key (utils/unique-key nil)}
    [:button {:type "button" :class "close" :data-dismiss "alert"} "x"] 

@@ -45,7 +45,7 @@
   data supplie to the response object by the server"
   [resp]
 
-  (println "::==> handle-reponse-ok: rsp: " resp)
+  (println "::==> image-view/handle-reponse-ok: rsp: " resp)
   
   (let [rsp (cr/read-string resp)
         upl-messages (upload-messages rsp)
@@ -55,9 +55,9 @@
     ;;             :message "..."
     ;;             :outstrlst "..."}]}
     ;;
-    (println "::==> handle-response-ok: upload nessage " upl-messages)
-    (println "::==> handle-response-ok: cmd message" cmd-messages)
-    (println "::==> handle-response-ok: results: " (:results cmd-messages))
+    (println "::==> image-view/handle-response-ok: upload nessage " upl-messages)
+    (println "::==> image-view/handle-response-ok: cmd message" cmd-messages)
+    (println "::==> image-view/handle-response-ok: results: " (:results cmd-messages))
     (rf/dispatch [:progress-bar/tick 100])
     (rf/dispatch [:upload-status cmd-messages])
     (rf/dispatch [:progress-bar/stop])))
@@ -69,14 +69,14 @@
   "Handle a failed uplod"
   [ctx]
   (let [rsp (js->clj (:response ctx) :keywordize-keys true)
-        sts (utils/status "Upload failed!"
-                          [(str "HTTP status code: "  (:status ctx))
-                           (str "HTTP tatus message: " (:status-text ctx))
-                           (str "Failure type: " (:failure ctx)) 
-                           (str "Response message: " (:message rsp))]
+        sts (utils/status-message "Upload image"
+                                  [(str "Upload failed: " (:status-text ctx))
+                                   (str "HTTP status code: "  (:status ctx))
+                                   (str "Failure type: " (:failure ctx)) 
+                                   (str "Response message: " (:message rsp))]
                     nil)]
-    (println "::-> handle-reponse-error: response " (:response ctx))
-    (println "::-> handle-reponse-error: rsp " rsp)
+    (println "::==> image-view/handle-reponse-error: response " (:response ctx))
+    (println "::==> image-view/handle-reponse-error: rsp " rsp)
     (rf/dispatch [:progress-bar/stop])
     (rf/dispatch [:upload-status sts] )))
 
