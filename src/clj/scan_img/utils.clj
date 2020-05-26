@@ -323,13 +323,30 @@
      :exception #error {:cause \"error=2, No such file or directory\"
                         :via []  .... }}"
   [cmd result accum]
-  (let [result (-> {}
-                   (assoc :command cmd)
-                   (assoc :message "Command executed but exited with an exception.")
-                   (assoc :outstrlst (exception->strlst2 (:exception result))))]
-    (update accum :results conj result)))
+  (let [res (-> {}
+                (assoc :command cmd)
+                (assoc :message "Command executed but exited with an exception.")
+                (assoc :outstrlst (exception->strlst2 (:exception result))))]
+    (update accum :results conj res)))
 
 
+
+;;--------------------------------------------------------------
+;; Utility functions for extracting results from
+;; a command execution
+;;--------------------------------------------------------------
+(defn default-map
+  "Create a success message object like
+    {:exit 0
+     :out \"\"
+     :err
+     :exception nil}}"
+  [cmd result accum]
+  (let [res (-> {}
+                (assoc :command cmd)
+                (assoc :message "Command executed successfuly")
+                (assoc :outstrlst (pr-str result)))]
+    (update accum :results conj res)))
 
 
 
@@ -354,7 +371,8 @@
                                            "Examine server logs e.g. figwheel_server.log"])
     (some? (:out result)) (out-map cmd result accum)
     (some? (:err result)) (err-map cmd result accum)
-    (some? (:exception result)) (exc-map cmd result accum)))
+    (some? (:exception result)) (exc-map cmd result accum)
+    :else (default-map cmd result accum)))
 
 
 
